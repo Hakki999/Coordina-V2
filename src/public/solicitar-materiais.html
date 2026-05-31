@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Solicitar Materiais | Controle de Materiais</title>
+
+  <link rel="shortcut icon" href="./img/logoIcon.png" type="image/x-icon">
+
+  <link rel="stylesheet" href="./css/global.css" />
+  <link rel="stylesheet" href="./css/solicitar-materiais.css" />
+</head>
+
+<body>
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Home | Controle de Materiais</title>
+
+  <link rel="stylesheet" href="/css/global.css" />
+  <link rel="stylesheet" href="/css/messages.css" />
+  <link rel="stylesheet" href="/css/home.css" />
+</head>
+
+<body>
+
+  <div class="app-layout">
+
+    <aside class="sidebar">
+
+      <div class="sidebar-header">
+        <div class="sidebar-logo">CM</div>
+
+        <div>
+          <h2>Controle</h2>
+          <span>Materiais</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+
+        <a href="/home.html" class="nav-link" id="home">
+          <span class="nav-icon">🏠</span>
+          <span>Home</span>
+        </a>
+
+        <a href="/solicitar-materiais.html" class="nav-link active" id="solicitarMateriais">
+          <span class="nav-icon">📦</span>
+          <span>Solicitar materiais</span>
+        </a>
+
+        <a href="/solicitacoes.html" class="nav-link" id="solicitacoes">
+          <span class="nav-icon">📋</span>
+          <span>Solicitações</span>
+        </a>
+
+        <a href="/configuracoes.html" class="nav-link" id="configuracoes">
+          <span class="nav-icon">⚙️</span>
+          <span>Configurações</span>
+        </a>
+
+        <a href="/novo-usuario.html" class="nav-link" id="novoUsuario">
+          <span class="nav-icon">👤</span>
+          <span>Gerar novo usuário</span>
+        </a>
+
+      </nav>
+
+      <div class="sidebar-footer">
+        <button id="btnLogout" class="logout-button">
+          <span>🚪</span>
+          <span>Sair</span>
+        </button>
+      </div>
+
+    </aside>
+
+  <main class="main-content">
+
+        <span class="page-badge">Nova solicitação</span>
+
+    <section class="solicitar-container">
+
+      <!-- CARD ESQUERDO -->
+      <div class="card solicitar-card card-ups">
+
+        <div class="solicitar-card-header">
+          <div>
+            <h3>UPs</h3>
+            <p>Informe a UP e a quantidade.</p>
+          </div>
+        </div>
+
+        <div class="ups-table-wrapper">
+          <table class="ups-table">
+            <thead>
+              <tr>
+                <th>UP</th>
+                <th>Quantidade</th>
+              </tr>
+            </thead>
+
+            <tbody id="tabelaUps">
+              <!-- Linhas criadas pelo JS -->
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+
+      <!-- CARD DIREITO -->
+      <div class="card solicitar-card card-materiais">
+
+        <div class="solicitar-card-header materiais-header">
+          <div>
+            <h3>Materiais gerados</h3>
+            <p>Resultado calculado pelas UPs informadas.</p>
+          </div>
+
+          <span id="contadorMateriais" class="contador-materiais">
+            0 itens
+          </span>
+        </div>
+
+        <div class="materiais-table-wrapper">
+          <table class="materiais-table">
+            <thead>
+              <tr>
+                <th>Descrição</th>
+                <th>Quantidade</th>
+              </tr>
+            </thead>
+
+            <tbody id="tabelaMateriais">
+              <tr>
+                <td colspan="2" class="empty-row">
+                  Nenhum material selecionado.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <button id="btnProximo" class="btn-proximo" type="button">
+          PRÓXIMO
+        </button>
+
+      </div>
+
+    </section>
+
+  </main>
+
+
+  </div>
+
+  <!-- MODAL -->
+  <section id="modalFormulario" class="modal hidden">
+
+    <div class="modal-card">
+
+      <div class="modal-header">
+        <div>
+          <span class="page-badge">Finalizar</span>
+          <h2>Informações da solicitação</h2>
+          <p>Preencha os dados restantes para enviar a solicitação.</p>
+        </div>
+
+        <button id="btnFecharModal" class="btn-fechar" type="button">
+          ×
+        </button>
+      </div>
+
+      <form id="formSolicitacao" class="form-solicitacao">
+
+        <div class="form-group">
+          <label for="projeto">Projeto</label>
+          <input type="text" id="projeto" placeholder="Ex: 8327084" required />
+        </div>
+
+        <div class="form-group">
+          <label for="cidade">Cidade</label>
+          <input type="text" id="cidade" placeholder="Ex: Firminópolis" required />
+        </div>
+
+        <div class="form-group">
+          <label for="equipe">Equipe</label>
+          <input type="text" id="equipe" placeholder="Ex: FIRO001M" required />
+        </div>
+
+        <div class="form-group">
+          <label for="tensao_rede">Tensão da rede</label>
+          <select id="tensao_rede" required>
+            <option value="">Selecione</option>
+            <option value="13.8">13.8 kV</option>
+            <option value="34.5">34.5 kV</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="data_exe">Data de execução</label>
+          <input type="date" id="data_exe" required />
+        </div>
+
+        <div class="form-group">
+          <label for="tipo_servico">Tipo de serviço</label>
+          <select id="tipo_servico" required>
+            <option value="">Selecione</option>
+            <option value="Emergência">Emergência</option>
+            <option value="Manutenção">Manutenção</option>
+            <option value="Obras">Obras</option>
+            <option value="Reposição">Reposição</option>
+            <option value="Leve">Leve</option>
+          </select>
+        </div>
+
+        <div class="form-group full">
+          <label for="observacao">Observação</label>
+          <textarea id="observacao" rows="4" placeholder="Observações adicionais..."></textarea>
+        </div>
+
+        <div class="form-actions full">
+          <button type="button" id="btnCancelar" class="btn-cancelar">
+            Voltar
+          </button>
+
+          <button type="submit" class="btn-enviar">
+            Enviar solicitação
+          </button>
+        </div>
+
+      </form>
+
+    </div>
+
+  </section>
+
+  <datalist id="listaUps"></datalist>
+
+  <script src="./js/messages.js"></script>
+  <script src="./js/ajustarMenu.js"></script>p
+  <script src="/js/solicitar-materiais.js"></script>
+</body>
+</html>

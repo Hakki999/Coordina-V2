@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Home | Controle de Materiais</title>
+
+  <link rel="shortcut icon" href="./img/logoIcon.png" type="image/x-icon">
+
+  <link rel="stylesheet" href="/css/global.css" />
+  <link rel="stylesheet" href="/css/messages.css" />
+  <link rel="stylesheet" href="/css/home.css" />
+</head>
+
+<body>
+
+  <div class="app-layout">
+
+    <aside class="sidebar">
+
+      <div class="sidebar-header">
+        <div class="sidebar-logo">CM</div>
+
+        <div>
+          <h2>Controle</h2>
+          <span>Materiais</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+
+        <a href="/home.html" class="nav-link active" id="home">
+          <span class="nav-icon">🏠</span>
+          <span>Home</span>
+        </a>
+
+        <a href="/solicitar-materiais.html" class="nav-link" id="solicitarMateriais">
+          <span class="nav-icon">📦</span>
+          <span>Solicitar materiais</span>
+        </a>
+
+        <a href="/solicitacoes.html" class="nav-link" id="solicitacoes">
+          <span class="nav-icon">📋</span>
+          <span>Solicitações</span>
+        </a>
+
+        <a href="/configuracoes.html" class="nav-link" id="configuracoes">
+          <span class="nav-icon">⚙️</span>
+          <span>Configurações</span>
+        </a>
+
+        <a href="/novo-usuario.html" class="nav-link" id="novoUsuario">
+          <span class="nav-icon">👤</span>
+          <span>Gerar novo usuário</span>
+        </a>
+
+      </nav>
+
+      <div class="sidebar-footer">
+        <button id="btnLogout" class="logout-button">
+          <span>🚪</span>
+          <span>Sair</span>
+        </button>
+      </div>
+
+    </aside>
+
+    <main class="main-content">
+
+      <header class="topbar">
+        <div>
+          <h1>Home</h1>
+          <p>Bem-vindo ao sistema de controle de materiais.</p>
+        </div>
+
+        <div class="user-chip">
+          <span class="user-avatar">:(</span>
+          <div>
+            <strong id="nomeUsuario">Usuário</strong>
+            <small id="perfilUsuario">Sistema interno</small>
+          </div>
+        </div>
+      </header>
+
+      <section class="welcome-card">
+
+        <div class="welcome-content">
+          <span class="welcome-badge">Sistema ativo</span>
+
+          <h2>Bem-vindo ao Controle de Materiais</h2>
+
+          <p>
+            Use o menu lateral para solicitar materiais, acompanhar solicitações,
+            acessar configurações ou gerar novos usuários.
+          </p>
+
+          <div class="welcome-actions">
+            <a href="/solicitar-materiais.html" class="btn">
+              Solicitar materiais
+            </a>
+
+            <a href="/solicitacoes.html" class="btn btn-secondary">
+              Ver solicitações
+            </a>
+          </div>
+        </div>
+
+        <div class="welcome-illustration">
+          <div class="floating-card card-one">
+            <strong>Materiais</strong>
+            <span>Solicitação rápida</span>
+          </div>
+
+          <div class="floating-card card-two">
+            <strong>Status</strong>
+            <span>Acompanhamento</span>
+          </div>
+
+          <div class="circle-bg"></div>
+        </div>
+
+      </section>
+
+    </main>
+
+  </div>
+
+  <script src="/js/ajustarMenu.js"></script>
+  <script src="/js/messages.js"></script>
+  <script src="/js/home.js"></script>
+</body>
+</html>
