@@ -5,6 +5,7 @@ const verificarToken = require('../middlewares/verificar-token');
 const { listarMateriais } = require("../controllers/get_materiais");
 const criarSolicitacao = require("../controllers/criar_solicitacao");
 const listarSolicitacoes = require("../controllers/listarSolicitacoes");
+const alterarConfig = require("../controllers/config-materiais");
 
 router.get('/', (req, res) => {
   res.sendFile('login.html', { root: './src/public' });
@@ -20,6 +21,10 @@ router.get('/solicitar-materiais', verificarToken, (req, res) => {
 
 router.get('/solicitacoes', verificarToken, (req, res) => {
   res.sendFile('solicitacoes.html', { root: './src/public' });
+});
+
+router.get('/configuracoes', verificarToken, (req, res) => {
+  res.sendFile('configuracoes.html', { root: './src/public' });
 });
 
 router.get("/perfil", verificarToken, (req, res) => {
@@ -74,6 +79,24 @@ router.post("/listar-solicitacoes", verificarToken, async (req, res) => {
     });
   }
 });
+
+router.post("/listar-solicitacoes-por-id", verificarToken, async (req, res) => {
+  try {
+    const { id_usuario } = req.body;
+
+    const solicitacoes = await listarSolicitacoesPorId(id_usuario);
+
+    res.json(solicitacoes);
+  } catch (error) {
+    console.error("Erro ao listar solicitações:", error);
+
+    res.status(500).json({
+      error: "Erro ao listar solicitações"
+    });
+  }
+});
+
+router.post("/salvar-config-listas-materiais", verificarToken, alterarConfig);
 //---------------------------------------------
 
 router.post("/logout", (req, res) => {

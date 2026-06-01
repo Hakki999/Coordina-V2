@@ -272,10 +272,11 @@ body.modal-open {
 
 .modal-header {
   flex: none;
-  padding: 22px 24px;
-  display: flex;
+  padding: 4px 24px;
+  display: space-between;
   justify-content: space-between;
   align-items: flex-start;
+  flex-direction: row;
   gap: 18px;
   border-bottom: 1px solid var(--border);
   background:

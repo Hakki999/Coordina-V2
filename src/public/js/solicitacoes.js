@@ -14,11 +14,7 @@ const dataFim = document.getElementById("dataFim");
 
 const btnAtualizar = document.getElementById("btnAtualizar");
 const btnLimparFiltros = document.getElementById("btnLimparFiltros");
-
 const modalMateriais = document.getElementById("modalMateriais");
-const btnFecharModalMateriais = document.getElementById("btnFecharModalMateriais");
-const tituloModalMateriais = document.getElementById("tituloModalMateriais");
-const subtituloModalMateriais = document.getElementById("subtituloModalMateriais");
 const resumoSolicitacao = document.getElementById("resumoSolicitacao");
 const tabelaMateriaisModal = document.getElementById("tabelaMateriaisModal");
 
@@ -260,7 +256,7 @@ function renderizarSolicitacoes() {
       </td>
       <td>
         <button type="button" class="btn-detalhes">
-          Ver
+          Imprimir
         </button>
       </td>
     `;
@@ -271,7 +267,9 @@ function renderizarSolicitacoes() {
 
     tr.querySelector(".btn-detalhes").addEventListener("click", (event) => {
       event.stopPropagation();
-      abrirMateriaisSolicitados(item.id);
+      console.warn(item[0]);
+      
+      imprimirListaMateriais(item);
     });
 
     tabelaSolicitacoes.appendChild(tr);
@@ -294,11 +292,6 @@ function abrirMateriaisSolicitados(id) {
   if (linha) {
     linha.classList.add("linha-selecionada");
   }
-
-  tituloModalMateriais.textContent = `Solicitação #${solicitacao.id}`;
-
-  subtituloModalMateriais.textContent =
-    `${solicitacao.projeto || "Sem projeto"} • ${solicitacao.cidade || "Sem cidade"} • ${solicitacao.equipe || "Sem equipe"}`;
 
   resumoSolicitacao.innerHTML = `
     <div class="resumo-item">
@@ -406,7 +399,6 @@ function limparFiltros() {
 });
 
 btnLimparFiltros.addEventListener("click", limparFiltros);
-btnFecharModalMateriais.addEventListener("click", fecharModalMateriais);
 
 modalMateriais.addEventListener("click", (event) => {
   if (event.target === modalMateriais) {
