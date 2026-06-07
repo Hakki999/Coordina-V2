@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Configurações | Controle de Materiais</title>
+
+  <link rel="shortcut icon" href="/common/assets/logoIcon.png" type="image/x-icon">
+  <link rel="stylesheet" href="/common/styles/global.css" />
+  <link rel="stylesheet" href="/common/styles/messages.css" />
+  <link rel="stylesheet" href="/pages/configuracoes/style.css" />
+</head>
+
+<body>
+  <div class="app-layout">
+
+    <aside class="sidebar" data-active="configuracoes"></aside>
+
+    <main class="main-content">
+
+      <section class="config-header card">
+        <div>
+          <span class="page-badge">Configurações</span>
+          <h2>Lista de Materiais por UP</h2>
+          <p>Edite, adicione ou exclua os materiais da tabela config_listas_materiais.</p>
+        </div>
+
+        <div class="header-actions">
+          <button id="btnAdicionarLinha" type="button" class="btn-secondary">
+            + Adicionar linha
+          </button>
+
+          <button id="btnSalvar" type="button">
+            Salvar alterações
+          </button>
+        </div>
+      </section>
+
+      <section class="card filtros-card">
+
+        <div class="filtros-grid">
+
+          <div class="form-group">
+            <label for="filtroUP">Filtrar por UP</label>
+            <input type="text" id="filtroUP" placeholder="Ex: N1, N2, CE1..." />
+          </div>
+
+          <div class="form-group">
+            <label for="filtroMaterial">Filtrar por material</label>
+            <input type="text" id="filtroMaterial" placeholder="Descrição do material..." />
+          </div>
+
+          <div class="form-group">
+            <label for="filtroAlterados">Visualização</label>
+            <select id="filtroAlterados">
+              <option value="">Todos</option>
+              <option value="alterados">Somente alterados</option>
+              <option value="novos">Somente novos</option>
+            </select>
+          </div>
+
+          <div class="filtros-actions">
+            <button id="btnLimparFiltros" type="button" class="btn-secondary">
+              Limpar filtros
+            </button>
+          </div>
+
+        </div>
+
+      </section>
+
+      <section class="card tabela-card">
+
+        <div class="tabela-header">
+          <div>
+            <h3>Configuração de materiais</h3>
+            <p id="contadorRegistros">0 registros carregados</p>
+          </div>
+        </div>
+
+        <div class="table-wrapper config-table-wrapper">
+          <table class="config-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>UP</th>
+                <th>Qtd</th>
+                <th>Material</th>
+                <th>Situação</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+
+            <tbody id="tabelaConfigMateriais">
+              <tr>
+                <td colspan="6" class="empty-row">
+                  Carregando configurações...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </section>
+
+    </main>
+
+  </div>
+
+  <script src="/common/scripts/messages.js"></script>
+  <script src="/common/scripts/layout.js"></script>
+  <script src="/pages/configuracoes/script.js"></script>
+</body>
+</html>

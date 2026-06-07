@@ -1,162 +1,73 @@
 const db = require("../models/db");
+const { sanitizeText } = require("../utils/security");
 
 function idValido(id) {
-  if (id === null || id === undefined || id === "" || id === "null") {
-    return false;
-  }
-
   const numero = Number(id);
   return Number.isInteger(numero) && numero > 0;
 }
 
 async function alterarConfig(req, res) {
-  let connection;
+  const { itens = [], deletados = [] } = req.body;
+  const regional = req.usuario.regional;
 
+  if (!Array.isArray(itens) || !Array.isArray(deletados) || itens.length > 2000 || deletados.length > 2000) {
+    return res.status(400).json({ error: "Dados de configuração inválidos." });
+  }
+
+  const connection = await db.getConnection();
   try {
-    console.log("Body recebido:", req.body);
-
-    const { itens = [], deletados = [] } = req.body;
-
-    if (!Array.isArray(itens)) {
-      return res.status(400).json({
-        success: false,
-        error: "O campo itens precisa ser um array."
-      });
-    }
-
-    connection = await db.getConnection();
     await connection.beginTransaction();
-
     let criados = 0;
     let atualizados = 0;
     let excluidos = 0;
-    let ignorados = 0;
 
-    /*
-      ============================
-      DELETAR REGISTROS
-      ============================
-    */
-
-    const idsParaDeletar = Array.isArray(deletados)
-      ? deletados
-          .map((item) => {
-            if (typeof item === "object" && item !== null) {
-              return Number(item.id);
-            }
-
-            return Number(item);
-          })
-          .filter((id) => Number.isInteger(id) && id > 0)
-      : [];
-
-    if (idsParaDeletar.length > 0) {
-      const placeholders = idsParaDeletar.map(() => "?").join(",");
-
-      const [deleteResult] = await connection.query(
-        `
-          DELETE FROM config_listas_materiais
-          WHERE id IN (${placeholders})
-        `,
-        idsParaDeletar
+    const ids = deletados.map(item => Number(item?.id ?? item)).filter(idValido);
+    if (ids.length) {
+      const placeholders = ids.map(() => "?").join(",");
+      const [result] = await connection.query(
+        `DELETE FROM config_listas_materiais WHERE regional = ? AND id IN (${placeholders})`,
+        [regional, ...ids]
       );
-
-      excluidos = deleteResult.affectedRows;
+      excluidos = result.affectedRows;
     }
 
-    /*
-      ============================
-      CRIAR OU ATUALIZAR REGISTROS
-      ============================
-    */
-
     for (const item of itens) {
-      const id = item.id;
+      const up = sanitizeText(item.up, 100).toUpperCase();
+      const quantidade = sanitizeText(item.qtd ?? item.quantidade, 255);
+      const material = sanitizeText(item.material, 255);
 
-      const up = String(item.up || "")
-        .trim()
-        .toUpperCase();
-
-      const qtd = String(item.qtd ?? item.quantidade ?? "")
-        .trim();
-
-      const material = String(item.material || "")
-        .trim();
-
-      if (!up || !qtd || !material) {
-        ignorados++;
-        continue;
+      if (!up || !material || !quantidade || !/^[0-9A-Za-zÀ-ÿ.,/ -]+$/.test(quantidade)) {
+        const error = new Error("Há materiais com dados inválidos.");
+        error.status = 400;
+        throw error;
       }
 
-      if (idValido(id)) {
-        await connection.query(
-          `
-            INSERT INTO config_listas_materiais
-              (id, up, quantidade, material)
-            VALUES
-              (?, ?, ?, ?)
-            ON DUPLICATE KEY UPDATE
-              up = VALUES(up),
-              quantidade = VALUES(quantidade),
-              material = VALUES(material)
-          `,
-          [
-            Number(id),
-            up,
-            qtd,
-            material
-          ]
-        );
-
-        atualizados++;
+      if (idValido(item.id)) {
+        const [result] = await connection.execute(`
+          UPDATE config_listas_materiais
+          SET up = ?, quantidade = ?, material = ?
+          WHERE id = ? AND regional = ?
+        `, [up, quantidade, material, Number(item.id), regional]);
+        atualizados += result.affectedRows;
       } else {
-        await connection.query(
-          `
-            INSERT INTO config_listas_materiais
-              (up, quantidade, material)
-            VALUES
-              (?, ?, ?)
-          `,
-          [
-            up,
-            qtd,
-            material
-          ]
-        );
-
-        criados++;
+        await connection.execute(`
+          INSERT INTO config_listas_materiais (regional, up, quantidade, material)
+          VALUES (?, ?, ?, ?)
+        `, [regional, up, quantidade, material]);
+        criados += 1;
       }
     }
 
     await connection.commit();
-
-    return res.json({
-      success: true,
+    res.json({
       message: "Configurações salvas com sucesso.",
-      resumo: {
-        criados,
-        atualizados,
-        excluidos,
-        ignorados
-      }
+      resumo: { criados, atualizados, excluidos }
     });
-
   } catch (error) {
-    if (connection) {
-      await connection.rollback();
-    }
-
-    console.error("Erro ao salvar configurações:", error);
-
-    return res.status(500).json({
-      success: false,
-      error: "Erro ao salvar configurações."
-    });
-
+    await connection.rollback();
+    res.status(error.status || 500).json({ error: error.status ? error.message : "Erro ao salvar configurações." });
   } finally {
-    if (connection) {
-      connection.release();
-    }
+    connection.release();
   }
 }
 

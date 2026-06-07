@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Perfis | Controle de Materiais</title>
+  <link rel="shortcut icon" href="/common/assets/logoIcon.png" type="image/x-icon">
+  <link rel="stylesheet" href="/common/styles/global.css" />
+  <link rel="stylesheet" href="/common/styles/messages.css" />
+  <link rel="stylesheet" href="/pages/perfis/style.css" />
+</head>
+<body>
+  <div class="app-layout">
+    <aside class="sidebar" data-active="perfis"></aside>
+    <main class="main-content perfis-page">
+      <header class="page-header card">
+        <div>
+          <span class="page-badge">Administração</span>
+          <h1>Perfis de acesso</h1>
+          <p>Cadastre usuários e defina o acesso e a regional de cada pessoa.</p>
+        </div>
+      </header>
+
+      <section class="perfis-grid">
+        <form id="formPerfil" class="card perfil-form">
+          <h2>Novo perfil</h2>
+          <div class="form-group">
+            <label for="nome">Nome do usuário</label>
+            <input id="nome" maxlength="100" autocomplete="off" required />
+          </div>
+          <div class="form-group">
+            <label for="senha">Senha temporária</label>
+            <input id="senha" type="password" minlength="10" maxlength="128" autocomplete="new-password" required />
+            <small>Use maiúscula, minúscula, número e símbolo.</small>
+          </div>
+          <div class="form-group">
+            <label for="tipoUsuario">Perfil</label>
+            <select id="tipoUsuario" required>
+              <option value="programacao">Programação</option>
+              <option value="almoxarifado">Almoxarifado</option>
+              <option value="admin">Administrador</option>
+              <option value="sem_perfil">Sem perfil</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="regional">Regional</label>
+            <select id="regional" required>
+              <option value="MBL">MBL - Montes Belos</option>
+              <option value="MHS">MHS - Morrinhos</option>
+            </select>
+          </div>
+          <button type="submit">Criar perfil</button>
+        </form>
+
+        <section class="card usuarios-card">
+          <div class="usuarios-header">
+            <h2>Usuários cadastrados</h2>
+            <span id="contadorUsuarios">0 usuários</span>
+          </div>
+          <div class="table-wrapper">
+            <table>
+              <thead><tr><th>Nome</th><th>Perfil</th><th>Regional</th><th>Criado em</th></tr></thead>
+              <tbody id="tabelaUsuarios"><tr><td colspan="4">Carregando...</td></tr></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+  <script src="/common/scripts/messages.js"></script>
+  <script src="/common/scripts/layout.js"></script>
+  <script src="/pages/perfis/script.js"></script>
+</body>
+</html>

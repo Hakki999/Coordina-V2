@@ -1,19 +1,14 @@
 const db = require("../models/db");
 
-async function listarMateriais() {
-  const [rows] = await db.query(`
-    SELECT 
-      id,
-      up,
-      quantidade,
-      material
+async function listarMateriais(regional) {
+  const [rows] = await db.execute(`
+    SELECT id, regional, up, quantidade, material
     FROM config_listas_materiais
-    WHERE material IS NOT NULL
-  `);
+    WHERE material IS NOT NULL AND regional = ?
+    ORDER BY up, material
+  `, [regional]);
 
   return rows;
 }
 
-module.exports = {
-  listarMateriais
-};
+module.exports = { listarMateriais };
