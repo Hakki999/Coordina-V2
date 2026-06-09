@@ -10,7 +10,8 @@ const itensMenu = [
   { id: "solicitarMateriais", href: "/solicitar-materiais", icone: "□", texto: "Solicitar materiais" },
   { id: "solicitacoes", href: "/solicitacoes", icone: "≡", texto: "Solicitações" },
   { id: "configuracoes", href: "/configuracoes", icone: "⚙", texto: "Configurações" },
-  { id: "perfis", href: "/perfis", icone: "+", texto: "Perfis de acesso" }
+  { id: "perfis", href: "/perfis", icone: "+", texto: "Perfis de acesso" },
+  { id: "teste", href: "/teste", icone: "+", texto: "Teste AsBuilt" }
 ];
 
 function aplicarTema(tema) {
