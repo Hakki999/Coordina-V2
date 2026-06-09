@@ -24,6 +24,7 @@ router.get("/solicitar-materiais", verificarToken, autorizar("admin", "almoxarif
 router.get("/solicitacoes", verificarToken, autorizar("admin", "almoxarifado", "programacao"), (req, res) => res.sendFile("pages/solicitacoes/index.html", { root: "./src/public" }));
 router.get("/configuracoes", verificarToken, autorizar("admin", "almoxarifado"), (req, res) => res.sendFile("pages/configuracoes/index.html", { root: "./src/public" }));
 router.get("/perfis", verificarToken, autorizar("admin"), (req, res) => res.sendFile("pages/perfis/index.html", { root: "./src/public" }));
+router.get("/teste",verificarToken, (req, res) => res.sendFile("pages/teste-asbuilt/index.html", { root: "./src/public" }));
 
 router.get("/perfil", verificarToken, (req, res) => {
   res.json({

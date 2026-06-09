@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validador de As Built - EQTL</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.css">
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+
+<body>
+    <div class="background-glow"></div>
+
+    <main class="app">
+        <section class="hero">
+            <div class="hero-content">
+                <div class="system-tag">
+                    <span class="pulse-dot"></span>
+                    Auditoria técnica do As Built
+                </div>
+
+                <h1>Validador de materiais, serviços e pontos</h1>
+                <p>
+                    Compare a lista técnica com a medição, valide os serviços pelo caderno EQTL e identifique
+                    exatamente o ponto, a linha e a regra que apresentam divergência.
+                </p>
+
+                <div class="hero-stats">
+                    <div class="stat-card">
+                        <span>Base 01</span>
+                        <strong>Materiais / UP por Barramento</strong>
+                    </div>
+                    <div class="stat-card">
+                        <span>Base 02</span>
+                        <strong>Serviços / Medição Única</strong>
+                    </div>
+                    <div class="stat-card">
+                        <span>Catálogo padrão</span>
+                        <strong id="catalogHeroStatus">Carregando caderno EQTL...</strong>
+                    </div>
+                </div>
+            </div>
+
+            <aside class="step-card">
+                <div class="step-icon">⚙</div>
+                <span class="step-label">Etapa atual</span>
+                <strong id="currentStepText">1 de 2</strong>
+                <small id="currentStepDesc">Importe materiais / UP por Barramento</small>
+            </aside>
+        </section>
+
+        <section class="workflow">
+            <div class="workflow-item active">
+                <span>1</span>
+                <p>Importar materiais</p>
+            </div>
+            <div class="workflow-line"></div>
+            <div class="workflow-item">
+                <span>2</span>
+                <p>Importar serviços</p>
+            </div>
+            <div class="workflow-line"></div>
+            <div class="workflow-item">
+                <span>3</span>
+                <p>Analisar o As Built</p>
+            </div>
+        </section>
+
+        <section class="panel config-panel">
+            <details>
+                <summary>
+                    <div>
+                        <span class="section-label">Configuração</span>
+                        <strong>Regras da validação</strong>
+                    </div>
+                    <span class="summary-hint">Clique para ajustar</span>
+                </summary>
+
+                <div class="config-grid">
+                    <label class="field">
+                        <span>Tolerância de quantidade (%)</span>
+                        <input id="tolerancePercent" type="number" min="0" max="100" step="0.1" value="10">
+                    </label>
+
+                    <label class="field">
+                        <span>Fator de cabo para fase ABC</span>
+                        <input id="cableFactorABC" type="number" min="0.01" step="0.01" value="4.41">
+                        <small>Nos TXT de referência: quantidade do serviço ≈ comprimento × 4,41.</small>
+                    </label>
+
+                    <label class="field">
+                        <span>Trocar caderno de serviços EQTL</span>
+                        <input id="catalogFile" type="file" accept=".xlsx,.xls,.csv">
+                        <small id="catalogStatus">Catálogo padrão incorporado ao sistema.</small>
+                    </label>
+
+                    <div class="rule-toggles config-wide">
+                        <label><input id="ruleCatalog" type="checkbox" checked> Serviço fora do caderno EQTL</label>
+                        <label><input id="rulePoint" type="checkbox" checked> Ponto sem material ou serviço</label>
+                        <label><input id="ruleLinks" type="checkbox" checked> Vínculos material x serviço</label>
+                        <label><input id="ruleCable" type="checkbox" checked> Cabo, bitola e metragem</label>
+                        <label><input id="ruleQuality" type="checkbox" checked> Dados inválidos e duplicados</label>
+                    </div>
+                </div>
+
+                <p class="config-note">
+                    Os nomes alternativos de colunas e os vínculos específicos ficam em
+                    <code>js/config.js</code>. O sistema tenta reconhecer automaticamente colunas como
+                    Barramento, Ponto, Código, Código Serviço, Quantidade e Solicitado.
+                </p>
+            </details>
+        </section>
+
+        <section class="panel input-panel">
+            <div class="panel-header">
+                <div>
+                    <span class="section-label">Entrada de dados</span>
+                    <h2 id="inputTitle">Importar materiais / UP por Barramento</h2>
+                    <p id="inputDescription">
+                        Cole o CSV abaixo ou selecione um arquivo CSV/XLSX. Confira a tabela antes de salvar a etapa.
+                    </p>
+                </div>
+            </div>
+
+            <div class="file-import-row">
+                <label class="file-button">
+                    <input id="dataFile" type="file" accept=".csv,.txt,.xlsx,.xls">
+                    Selecionar CSV ou Excel
+                </label>
+                <span id="dataFileStatus">Nenhum arquivo selecionado</span>
+            </div>
+
+            <textarea id="csvText" placeholder='Cole aqui o conteúdo CSV...
+
+Exemplo:
+"ID","Tipo do Elemento","Barramento","Código","Descrição","Quantidade"
+1,"POSTE","PONTO-001","N1","ESTRUTURA MONOFÁSICA","1"'></textarea>
+
+            <div class="actions">
+                <button class="btn btn-primary" id="importButton" type="button">
+                    Importar conteúdo
+                </button>
+                <button class="btn btn-success" id="nextStep" type="button">
+                    Salvar etapa e continuar
+                </button>
+                <button class="btn btn-secondary" id="resetButton" type="button">
+                    Reiniciar
+                </button>
+            </div>
+
+            <div id="messageBox" class="message info">
+                <div class="message-icon">i</div>
+                <div>
+                    <strong>Aguardando importação</strong>
+                    <span>Importe primeiro a base de materiais / UP por Barramento.</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="table-panel">
+            <div class="table-header">
+                <div>
+                    <span class="section-label">Pré-visualização</span>
+                    <h2>Tabela importada</h2>
+                    <p>Confira os dados e os nomes das colunas antes de salvar a etapa.</p>
+                </div>
+                <div class="table-badge" id="tableBadge">0 linhas</div>
+            </div>
+
+            <div class="table-wrapper">
+                <div id="excel"></div>
+            </div>
+        </section>
+
+        <section id="resultsPanel" class="panel results-panel hidden">
+            <div id="comparisonSummary"></div>
+        </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+    <script src="./js/caderno-eqtl.js"></script>
+    <script src="./js/config.js"></script>
+    <script src="./js/validator.js"></script>
+    <script src="./js/table.js"></script>
+    <script src="./js/main.js"></script>
+</body>
+
+</html>
