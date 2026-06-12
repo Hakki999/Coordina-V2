@@ -42,6 +42,20 @@ async function migrate() {
     `);
   }
 
+  if (!(await columnExists("config_listas_materiais", "codigo_13_8"))) {
+    await db.query(`
+      ALTER TABLE config_listas_materiais
+      ADD COLUMN codigo_13_8 VARCHAR(50) NULL AFTER material
+    `);
+  }
+
+  if (!(await columnExists("config_listas_materiais", "codigo_34_5"))) {
+    await db.query(`
+      ALTER TABLE config_listas_materiais
+      ADD COLUMN codigo_34_5 VARCHAR(50) NULL AFTER codigo_13_8
+    `);
+  }
+
   if (!(await columnExists("materiais_solicitados", "cancelado_em"))) {
     await db.query("ALTER TABLE materiais_solicitados ADD COLUMN cancelado_em TIMESTAMP NULL AFTER status");
   }

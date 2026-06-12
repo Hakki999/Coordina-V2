@@ -35,6 +35,8 @@ async function alterarConfig(req, res) {
       const up = sanitizeText(item.up, 100).toUpperCase();
       const quantidade = sanitizeText(item.qtd ?? item.quantidade, 255);
       const material = sanitizeText(item.material, 255);
+      const codigo13 = sanitizeText(item.codigo_13_8, 50);
+      const codigo34 = sanitizeText(item.codigo_34_5, 50);
 
       if (!up || !material || !quantidade || !/^[0-9A-Za-zÀ-ÿ.,/ -]+$/.test(quantidade)) {
         const error = new Error("Há materiais com dados inválidos.");
@@ -45,17 +47,24 @@ async function alterarConfig(req, res) {
       if (idValido(item.id)) {
         const [result] = await connection.execute(`
           UPDATE config_listas_materiais
-          SET up = ?, quantidade = ?, material = ?
+          SET up = ?, quantidade = ?, material = ?, codigo_13_8 = ?, codigo_34_5 = ?
           WHERE id = ? AND regional = ?
-        `, [up, quantidade, material, Number(item.id), regional]);
+        `, [up, quantidade, material, codigo13 || null, codigo34 || null, Number(item.id), regional]);
         atualizados += result.affectedRows;
       } else {
         await connection.execute(`
-          INSERT INTO config_listas_materiais (regional, up, quantidade, material)
-          VALUES (?, ?, ?, ?)
-        `, [regional, up, quantidade, material]);
+          INSERT INTO config_listas_materiais
+            (regional, up, quantidade, material, codigo_13_8, codigo_34_5)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `, [regional, up, quantidade, material, codigo13 || null, codigo34 || null]);
         criados += 1;
       }
+
+      await connection.execute(`
+        UPDATE config_listas_materiais
+        SET codigo_13_8 = ?, codigo_34_5 = ?
+        WHERE regional = ? AND material = ?
+      `, [codigo13 || null, codigo34 || null, regional, material]);
     }
 
     await connection.commit();

@@ -2,7 +2,7 @@ const db = require("../models/db");
 
 async function listarMateriais(regional) {
   const [rows] = await db.execute(`
-    SELECT id, regional, up, quantidade, material
+    SELECT id, regional, up, quantidade, material, codigo_13_8, codigo_34_5
     FROM config_listas_materiais
     WHERE material IS NOT NULL AND regional = ?
     ORDER BY up, material

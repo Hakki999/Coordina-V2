@@ -62,7 +62,9 @@ function transformarEmCatalogoUPs(materiaisBanco) {
 
     catalogoUPs[up].push({
       descricao: descricao,
-      quantidade: quantidade
+      quantidade: quantidade,
+      codigo_13_8: String(item.codigo_13_8 || "").trim(),
+      codigo_34_5: String(item.codigo_34_5 || "").trim()
     });
   });
 
@@ -508,11 +510,12 @@ function main(catalogoUPs) {
       },
       body: JSON.stringify(payload)
     })
-      .then((response) => {
+      .then(async (response) => {
+        const data = await response.json().catch(() => ({}));
         if (!response.ok) {
-          throw new Error("Erro na resposta do servidor");
+          throw new Error(data.error || "Erro na resposta do servidor");
         }
-        return response.json();
+        return data;
       })
       .then((data) => {
         atualizarMateriais();
@@ -522,7 +525,7 @@ function main(catalogoUPs) {
       })
       .catch((error) => {
         console.error("Erro ao enviar solicitação:", error);
-        msgErro("Erro ao enviar solicitação");
+        msgErro(error.message || "Erro ao enviar solicitação");
       })
   }
 

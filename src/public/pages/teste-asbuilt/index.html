@@ -6,14 +6,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Validador de As Built - EQTL</title>
 
+    <link rel="shortcut icon" href="/common/assets/logoIcon.png" type="image/x-icon">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.css">
-    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="/common/styles/global.css">
+    <link rel="stylesheet" href="/common/styles/messages.css">
+    <link rel="stylesheet" href="/pages/teste-asbuilt/css/style.css">
 </head>
 
 <body>
-    <div class="background-glow"></div>
+    <div class="app-layout">
+        <aside class="sidebar" data-active="teste"></aside>
 
-    <main class="app">
+        <main class="asbuilt-page">
+            <div class="background-glow"></div>
+            <div class="app">
         <section class="hero">
             <div class="hero-content">
                 <div class="system-tag">
@@ -177,17 +183,20 @@ Exemplo:
         <section id="resultsPanel" class="panel results-panel hidden">
             <div id="comparisonSummary"></div>
         </section>
-    </main>
+            </div>
+        </main>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
-    <script src="./js/caderno-eqtl.js"></script>
-    <script src="./js/config.js"></script>
-    <script src="./js/validator.js"></script>
-    <script src="./js/table.js"></script>
-    <script src="./js/main.js"></script>
+    <script src="/common/scripts/layout.js"></script>
+    <script src="/pages/teste-asbuilt/js/caderno-eqtl.js"></script>
+    <script src="/pages/teste-asbuilt/js/config.js"></script>
+    <script src="/pages/teste-asbuilt/js/validator.js"></script>
+    <script src="/pages/teste-asbuilt/js/table.js"></script>
+    <script src="/pages/teste-asbuilt/js/main.js"></script>
 </body>
 
 </html>

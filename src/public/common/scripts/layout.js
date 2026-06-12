@@ -1,8 +1,8 @@
 const permissoesMenu = {
-  admin: ["home", "solicitarMateriais", "solicitacoes", "configuracoes", "perfis"],
-  almoxarifado: ["home", "solicitarMateriais", "solicitacoes", "configuracoes"],
-  programacao: ["home", "solicitarMateriais", "solicitacoes"],
-  sem_perfil: ["home"]
+  admin: ["home", "solicitarMateriais", "solicitacoes", "configuracoes", "perfis", "teste"],
+  almoxarifado: ["home", "solicitarMateriais", "solicitacoes", "configuracoes", "teste"],
+  programacao: ["home", "solicitarMateriais", "solicitacoes", "teste"],
+  sem_perfil: ["home", "teste"]
 };
 
 const itensMenu = [
@@ -11,7 +11,7 @@ const itensMenu = [
   { id: "solicitacoes", href: "/solicitacoes", icone: "≡", texto: "Solicitações" },
   { id: "configuracoes", href: "/configuracoes", icone: "⚙", texto: "Configurações" },
   { id: "perfis", href: "/perfis", icone: "+", texto: "Perfis de acesso" },
-  { id: "teste", href: "/teste", icone: "+", texto: "Teste AsBuilt" }
+  { id: "teste", href: "/teste", icone: "👁️‍🗨️", texto: "Teste As-Built" }
 ];
 
 function aplicarTema(tema) {

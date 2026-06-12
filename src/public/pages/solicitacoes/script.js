@@ -139,10 +139,12 @@ function normalizarSolicitacoes(rows) {
     if (descricao) {
       solicitacao.materiais.push({
         id: item.item_id,
+        codigo_material: item.codigo_material || "",
         descricao,
         quantidade,
         quantidade_lib: item.quantidade_lib ?? 0,
-        quantidade_dev: item.quantidade_dev ?? 0
+        quantidade_dev: item.quantidade_dev ?? 0,
+        unidade: item.unidade || ""
       });
     }
   });
@@ -410,7 +412,7 @@ function renderizarMateriaisModal(materiais) {
   if (!materiais || materiais.length === 0) {
     tabelaMateriaisModal.innerHTML = `
       <tr>
-        <td colspan="5" class="empty-row">
+        <td colspan="6" class="empty-row">
           Nenhum material encontrado para esta solicitação.
         </td>
       </tr>
@@ -424,6 +426,7 @@ function renderizarMateriaisModal(materiais) {
     const podeEditar = podeEditarQuantidades();
 
     tr.innerHTML = `
+      <td data-label="Código">${escaparHTML(material.codigo_material || "-")}</td>
       <td data-label="Descrição">${escaparHTML(material.descricao || "-")}</td>
       <td data-label="Solicitada">${escaparHTML(material.quantidade || "-")}</td>
       <td data-label="Liberada">

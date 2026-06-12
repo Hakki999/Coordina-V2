@@ -115,7 +115,7 @@ body {
 
 .config-table {
   width: 100%;
-  min-width: 1000px;
+  min-width: 1320px;
 }
 
 .config-table thead {
@@ -145,13 +145,20 @@ body {
 }
 
 .config-table th:nth-child(5),
-.config-table td:nth-child(5) {
+.config-table td:nth-child(5),
+.config-table th:nth-child(6),
+.config-table td:nth-child(6) {
+  width: 170px;
+}
+
+.config-table th:nth-child(7),
+.config-table td:nth-child(7) {
   width: 140px;
   text-align: center;
 }
 
-.config-table th:nth-child(6),
-.config-table td:nth-child(6) {
+.config-table th:nth-child(8),
+.config-table td:nth-child(8) {
   width: 110px;
   text-align: center;
 }

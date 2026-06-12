@@ -29,7 +29,7 @@ async function carregarConfiguracoes() {
   try {
     tabelaConfigMateriais.innerHTML = `
       <tr>
-        <td colspan="6" class="empty-row">
+        <td colspan="8" class="empty-row">
           Carregando configurações...
         </td>
       </tr>
@@ -48,6 +48,8 @@ async function carregarConfiguracoes() {
       up: item.up || "",
       qtd: item.qtd || item.quantidade || "",
       material: item.material || "",
+      codigo_13_8: item.codigo_13_8 || "",
+      codigo_34_5: item.codigo_34_5 || "",
       _status: "normal"
     }));
 
@@ -61,7 +63,7 @@ async function carregarConfiguracoes() {
 
     tabelaConfigMateriais.innerHTML = `
       <tr>
-        <td colspan="6" class="empty-row">
+        <td colspan="8" class="empty-row">
           Erro ao carregar configurações.
         </td>
       </tr>
@@ -99,7 +101,7 @@ function renderizarTabela(lista) {
   if (lista.length === 0) {
     tabelaConfigMateriais.innerHTML = `
       <tr>
-        <td colspan="6" class="empty-row">
+        <td colspan="8" class="empty-row">
           Nenhum registro encontrado.
         </td>
       </tr>
@@ -148,6 +150,24 @@ function renderizarTabela(lista) {
           data-campo="material" 
           value="${escaparAtributo(item.material)}" 
           placeholder="Descrição do material"
+        />
+      </td>
+
+      <td>
+        <input
+          class="input-cell"
+          data-campo="codigo_13_8"
+          value="${escaparAtributo(item.codigo_13_8)}"
+          placeholder="Código para 13.8 kV"
+        />
+      </td>
+
+      <td>
+        <input
+          class="input-cell"
+          data-campo="codigo_34_5"
+          value="${escaparAtributo(item.codigo_34_5)}"
+          placeholder="Código para 34.5 kV"
         />
       </td>
 
@@ -215,7 +235,9 @@ function atualizarCampo(id, campo, valor) {
       (
         String(original.up || "") !== String(item.up || "") ||
         String(original.qtd || "") !== String(item.qtd || "") ||
-        String(original.material || "") !== String(item.material || "")
+        String(original.material || "") !== String(item.material || "") ||
+        String(original.codigo_13_8 || "") !== String(item.codigo_13_8 || "") ||
+        String(original.codigo_34_5 || "") !== String(item.codigo_34_5 || "")
       );
 
     item._status = foiAlterado ? "editado" : "normal";
@@ -230,6 +252,8 @@ function adicionarLinha() {
     up: "",
     qtd: "",
     material: "",
+    codigo_13_8: "",
+    codigo_34_5: "",
     _status: "novo"
   };
 
@@ -299,7 +323,9 @@ async function salvarAlteracoes() {
         id: typeof item.id === "number" ? item.id : null,
         up: String(item.up || "").trim().toUpperCase(),
         qtd: String(item.qtd || "").trim(),
-        material: String(item.material || "").trim()
+        material: String(item.material || "").trim(),
+        codigo_13_8: String(item.codigo_13_8 || "").trim(),
+        codigo_34_5: String(item.codigo_34_5 || "").trim()
       }));
 
     if (itensAlterados.length === 0 && idsExcluidos.length === 0) {

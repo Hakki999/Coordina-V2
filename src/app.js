@@ -9,7 +9,7 @@ app.set("trust proxy", 1);
 
 app.use((req, res, next) => {
   res.set({
-    "Content-Security-Policy": "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'",
+    "Content-Security-Policy": "default-src 'self'; img-src 'self' data:; style-src 'self' https://cdn.jsdelivr.net; script-src 'self' https://cdn.jsdelivr.net; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'",
     "Cross-Origin-Opener-Policy": "same-origin",
     "Cross-Origin-Resource-Policy": "same-origin",
     "Referrer-Policy": "no-referrer",
