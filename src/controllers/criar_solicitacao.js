@@ -47,23 +47,26 @@ async function criarSolicitacao(req) {
   }
 
   const upList = [...quantidadesPorUp.keys()];
-  const placeholders = upList.map(() => "?").join(",");
   const [catalogo] = await db.query(`
     SELECT up, quantidade, material, codigo_13_8, codigo_34_5
     FROM config_listas_materiais
-    WHERE regional = ? AND up IN (${placeholders})
-  `, [regional, ...upList]);
+    WHERE regional = ?
+  `, [regional]);
   const upsEncontradas = new Set(catalogo.map(item => normalizarUp(item.up)));
 
-  if (upList.some(up => !upsEncontradas.has(up))) {
-    const error = new Error("Uma ou mais UPs não pertencem à sua regional.");
-    error.status = 403;
-    throw error;
+  const upsNaoEncontradas = upList.filter(up => !upsEncontradas.has(up));
+  if (upsNaoEncontradas.length) {
+    console.warn(
+      `[solicitacoes] UPs ignoradas por não constarem no catálogo da regional ${regional}:`,
+      upsNaoEncontradas
+    );
   }
 
   const materiais = new Map();
   for (const item of catalogo) {
     const up = normalizarUp(item.up);
+    if (!quantidadesPorUp.has(up)) continue;
+
     const quantidadeBase = quantidadeNumerica(item.quantidade);
     const total = quantidadeBase * quantidadesPorUp.get(up);
     const codigo = tensao === "13.8" ? item.codigo_13_8 : item.codigo_34_5;
