@@ -460,6 +460,44 @@ tr.has-error .save-cell {
   cursor: pointer;
 }
 
+.columns-list .column-option {
+  min-height: 36px;
+  user-select: none;
+}
+
+.column-drag-handle {
+  width: 20px;
+  min-width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--muted);
+  background: var(--surface-soft);
+  cursor: grab;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.column-drag-handle::before {
+  content: "\2807";
+}
+
+.column-option.is-dragging {
+  opacity: .55;
+}
+
+.column-option.is-drag-over {
+  box-shadow: inset 0 0 0 2px var(--primary);
+}
+
+.column-option:active .column-drag-handle {
+  cursor: grabbing;
+}
+
 .columns-list input {
   width: auto;
 }

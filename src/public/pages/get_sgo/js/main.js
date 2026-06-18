@@ -30,6 +30,7 @@ async function api(url, options = {}) {
         ...options,
         headers: {
             'Content-Type': 'application/json',
+            'authorization': 'Basic SjQwODIxNDQ5OjEwOTFabl8kKnBgIy1TQVA',
             ...(options.headers || {})
         }
     });

@@ -2,6 +2,7 @@ let colunasAsbuilt = [];
 let colunasMeta = [];
 let registrosAsbuilt = [];
 let podeEditarAsbuilt = false;
+let podeAdministrarColunas = false;
 let ancoraSelecaoId = null;
 let textoCarga = "Carregando...";
 let projetoUrlConsumido = false;
@@ -11,18 +12,21 @@ let analiseImportacao = null;
 let camposTesteSgo = [];
 let paginacaoAsbuilt = { pagina: 1, limite: 150, total: 0, totalPaginas: 1 };
 let filtroTimer = null;
+let campoColunaArrastada = null;
 const selecionados = new Set();
 const filtrosColuna = new Map();
 const timersSalvamento = new Map();
 const sugestoesFiltroCache = new Map();
 const timersSugestoes = new Map();
 const CHAVE_COLUNAS = "controle-asbuilt-colunas-visiveis-v2";
+const CHAVE_ORDEM_COLUNAS = "controle-asbuilt-colunas-ordem-v1";
 const COLUNAS_PADRAO = new Set([
   "projeto", "data_exe", "data_conclusao_projeto", "cidade", "localizacao", "precisa_ir_campo", "data_asbuilt",
   "sapid", "status", "status_sap", "versao", "pep", "nome", "observacao",
   "responsavel", "status_sgo", "pdf_nome", "criado_por_nome", "concluido_por_nome"
 ]);
 let camposVisiveis = null;
+let ordemCamposColunas = [];
 
 const escapar = valor => String(valor ?? "")
   .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
@@ -63,18 +67,37 @@ function todasColunas() {
   return [...colunasAsbuilt, ...colunasMeta];
 }
 
-function carregarPreferenciaColunas() {
+function lerArrayStorage(chave) {
   try {
-    const salvas = JSON.parse(localStorage.getItem(CHAVE_COLUNAS));
-    camposVisiveis = Array.isArray(salvas) ? new Set(salvas) : new Set(COLUNAS_PADRAO);
+    const valor = JSON.parse(localStorage.getItem(chave));
+    return Array.isArray(valor) ? valor.map(item => String(item)).filter(Boolean) : null;
   } catch {
-    camposVisiveis = new Set(COLUNAS_PADRAO);
+    return null;
   }
+}
+
+function carregarPreferenciaColunas() {
+  const salvas = lerArrayStorage(CHAVE_COLUNAS);
+  camposVisiveis = salvas ? new Set(salvas) : new Set(COLUNAS_PADRAO);
   camposVisiveis.add("projeto");
+
+  const ordemSalva = lerArrayStorage(CHAVE_ORDEM_COLUNAS);
+  ordemCamposColunas = ordemSalva || salvas || [...COLUNAS_PADRAO];
+  if (!ordemCamposColunas.includes("projeto")) ordemCamposColunas.unshift("projeto");
+}
+
+function colunasOrdenadas(colunas) {
+  const posicaoUsuario = new Map(ordemCamposColunas.map((campo, index) => [campo, index]));
+  const posicaoNatural = new Map(colunas.map((coluna, index) => [coluna.campo, index]));
+  return [...colunas].sort((a, b) => {
+    const ordemA = posicaoUsuario.has(a.campo) ? posicaoUsuario.get(a.campo) : Number.MAX_SAFE_INTEGER;
+    const ordemB = posicaoUsuario.has(b.campo) ? posicaoUsuario.get(b.campo) : Number.MAX_SAFE_INTEGER;
+    return ordemA - ordemB || (posicaoNatural.get(a.campo) || 0) - (posicaoNatural.get(b.campo) || 0);
+  });
 }
 
 function colunasVisiveis() {
-  return todasColunas().filter(coluna => camposVisiveis.has(coluna.campo));
+  return colunasOrdenadas(todasColunas()).filter(coluna => camposVisiveis.has(coluna.campo));
 }
 
 function registrosFiltrados() {
@@ -386,36 +409,89 @@ function selecionarTodasLinhas() {
   definirCarga(textoCarga);
 }
 
+function renderizarListaColunas() {
+  document.getElementById("listaColunas").innerHTML = colunasOrdenadas(todasColunas()).map(coluna => `
+    <label class="column-option" draggable="true" data-column-option="${escapar(coluna.campo)}">
+      <span class="column-drag-handle" title="Arrastar coluna" aria-hidden="true"></span>
+      <input type="checkbox" value="${coluna.campo}" ${camposVisiveis.has(coluna.campo) ? "checked" : ""}
+        ${coluna.campo === "projeto" ? "disabled" : ""}>
+      <span>${escapar(coluna.titulo)}</span>
+    </label>
+  `).join("");
+}
+
 function abrirColunas() {
   document.querySelector("#modalColunas .columns-modal").classList.remove("validation-mode");
-  document.getElementById("listaColunas").innerHTML = todasColunas().map(coluna => `
-    <label><input type="checkbox" value="${coluna.campo}" ${camposVisiveis.has(coluna.campo) ? "checked" : ""}
-      ${coluna.campo === "projeto" ? "disabled" : ""}> ${escapar(coluna.titulo)}</label>
-  `).join("");
+  renderizarListaColunas();
   document.getElementById("colunasAdminPanel").hidden = true;
   document.getElementById("modalColunas").hidden = false;
 }
 
 function abrirValidacoes() {
-  if (!podeEditarAsbuilt) return msgAviso("Voce nao possui permissao para configurar validacoes.");
+  if (!podeAdministrarColunas) {
+    msgAviso("Somente administradores podem configurar validacoes.");
+    return false;
+  }
   document.querySelector("#modalColunas .columns-modal").classList.add("validation-mode");
   document.getElementById("colunasAdminPanel").hidden = false;
   renderizarAdminColunas();
   document.getElementById("modalColunas").hidden = false;
+  return true;
 }
 
 function abrirExclusaoColunasBanco() {
-  abrirValidacoes();
+  if (!abrirValidacoes()) return;
   document.querySelector(".database-columns-panel")?.scrollIntoView({ block: "start" });
 }
 
 function salvarColunas() {
   camposVisiveis = new Set([...document.querySelectorAll("#listaColunas input:checked")].map(input => input.value));
   camposVisiveis.add("projeto");
+  ordemCamposColunas = [...document.querySelectorAll("#listaColunas [data-column-option]")]
+    .map(item => item.dataset.columnOption)
+    .filter(Boolean);
   localStorage.setItem(CHAVE_COLUNAS, JSON.stringify([...camposVisiveis]));
+  localStorage.setItem(CHAVE_ORDEM_COLUNAS, JSON.stringify(ordemCamposColunas));
   document.getElementById("modalColunas").hidden = true;
   renderizarCabecalho();
   renderizarCorpo();
+}
+
+function limparArrasteColunas() {
+  campoColunaArrastada = null;
+  document.querySelectorAll("#listaColunas .is-dragging, #listaColunas .is-drag-over").forEach(item => {
+    item.classList.remove("is-dragging", "is-drag-over");
+  });
+}
+
+function iniciarArrasteColuna(event) {
+  const item = event.target.closest("[data-column-option]");
+  if (!item) return;
+  campoColunaArrastada = item.dataset.columnOption;
+  item.classList.add("is-dragging");
+  event.dataTransfer.effectAllowed = "move";
+  event.dataTransfer.setData("text/plain", campoColunaArrastada);
+}
+
+function arrastarSobreColuna(event) {
+  const alvo = event.target.closest("[data-column-option]");
+  const arrastado = campoColunaArrastada
+    ? document.querySelector(`#listaColunas [data-column-option="${CSS.escape(campoColunaArrastada)}"]`)
+    : null;
+  if (!alvo || !arrastado || alvo === arrastado) return;
+
+  event.preventDefault();
+  document.querySelectorAll("#listaColunas .is-drag-over").forEach(item => item.classList.remove("is-drag-over"));
+  alvo.classList.add("is-drag-over");
+  const caixa = alvo.getBoundingClientRect();
+  const inserirDepois = event.clientY > caixa.top + caixa.height / 2;
+  alvo.parentElement.insertBefore(arrastado, inserirDepois ? alvo.nextSibling : alvo);
+}
+
+function soltarColuna(event) {
+  if (!campoColunaArrastada) return;
+  event.preventDefault();
+  limparArrasteColunas();
 }
 
 function textoOpcoes(coluna) {
@@ -1023,8 +1099,15 @@ document.getElementById("btnSalvarColunas").addEventListener("click", salvarColu
 document.getElementById("btnCancelarColunas").addEventListener("click", () => { document.getElementById("modalColunas").hidden = true; });
 document.getElementById("btnFecharValidacoes").addEventListener("click", () => { document.getElementById("modalColunas").hidden = true; });
 document.getElementById("btnPadraoColunas").addEventListener("click", () => {
-  document.querySelectorAll("#listaColunas input").forEach(input => { input.checked = COLUNAS_PADRAO.has(input.value); });
+  camposVisiveis = new Set(COLUNAS_PADRAO);
+  camposVisiveis.add("projeto");
+  ordemCamposColunas = [...COLUNAS_PADRAO];
+  renderizarListaColunas();
 });
+document.getElementById("listaColunas").addEventListener("dragstart", iniciarArrasteColuna);
+document.getElementById("listaColunas").addEventListener("dragover", arrastarSobreColuna);
+document.getElementById("listaColunas").addEventListener("drop", soltarColuna);
+document.getElementById("listaColunas").addEventListener("dragend", limparArrasteColunas);
 document.getElementById("formNovaColuna").addEventListener("submit", event => {
   criarColuna(event).catch(error => msgErro(error.message));
 });
@@ -1164,6 +1247,7 @@ document.addEventListener("usuario-carregado", event => {
   podeEditarAsbuilt = event.detail.permissoes.includes("medicao.controle_asbuilt.editar");
   const permissoes = event.detail.permissoes || [];
   const administrador = event.detail.tipo_usuario === "admin";
+  podeAdministrarColunas = administrador;
   const podeConfigurarSgo = administrador || permissoes.includes("admin.sgo_config");
   const podeImportarAsbuilt = administrador || permissoes.includes("admin.asbuilt_importar");
   document.getElementById("btnConfigSgo").hidden = !podeConfigurarSgo;
@@ -1173,7 +1257,7 @@ document.addEventListener("usuario-carregado", event => {
   document.getElementById("btnNovaLinha").hidden = !podeEditarAsbuilt;
   document.getElementById("btnConsultarSgo").hidden = !podeEditarAsbuilt;
   document.getElementById("btnAtualizarSelecionadas").hidden = !podeEditarAsbuilt;
-  document.getElementById("btnValidacoes").hidden = !podeEditarAsbuilt;
-  document.getElementById("btnExcluirColunasDB").hidden = !podeEditarAsbuilt;
+  document.getElementById("btnValidacoes").hidden = !podeAdministrarColunas;
+  document.getElementById("btnExcluirColunasDB").hidden = !podeAdministrarColunas;
   carregarRegistros();
 });
