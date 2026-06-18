@@ -305,7 +305,8 @@ body {
   font-size: 13px;
 }
 
-.sheet-input {
+.sheet-input,
+.calculated-input {
   width: 100%;
   height: 35px;
   padding: 6px 8px;
@@ -315,6 +316,14 @@ body {
   color: var(--text);
   font-size: 11px;
   text-overflow: ellipsis;
+}
+
+.calculated-input {
+  width: 100%;
+  cursor: default;
+  font-weight: 700;
+  color: var(--primary-dark);
+  background: var(--primary-soft);
 }
 
 .sheet-input:focus {
@@ -476,6 +485,7 @@ tr.has-error .save-cell {
   background: var(--surface-soft);
 }
 .column-create-form button { justify-self: end; align-self: end; }
+.column-create-form .formula-field { grid-column: span 2; }
 
 .column-create-form label,
 .column-admin-row label,
@@ -544,6 +554,8 @@ tr.has-error .save-cell {
   align-items: end; gap: 8px; border-top: 1px solid var(--border); background: var(--surface-soft);
 }
 .validation-editor .check-option, .validation-actions { grid-column: span 2; }
+.validation-editor .formula-field { grid-column: span 2; }
+.formula-field small { display: block; margin-top: 4px; color: var(--muted); font-size: 8px; }
 .validation-actions { display: flex; align-items: center; justify-content: flex-end; gap: 7px; }
 
 .column-admin-row .system-badge {
@@ -1001,6 +1013,8 @@ tr.has-error .save-cell {
   }
 
   .validation-editor .check-option,
+  .column-create-form .formula-field,
+  .validation-editor .formula-field,
   .validation-actions {
     grid-column: auto;
   }

@@ -40,9 +40,11 @@
           authorization: AUTORIZACAO,
           "content-type": "application/json;charset=UTF-8"
         },
-        referrer: `${BASE}/`,
         body: typeof corpo === "string" ? corpo : JSON.stringify(corpo),
         method: "POST",
+        mode: "cors",
+        cache: "no-store",
+        referrerPolicy: "no-referrer",
         signal: controller.signal
       });
       const texto = await response.text();
@@ -52,6 +54,9 @@
       return dados;
     } catch (error) {
       if (error.name === "AbortError") throw new Error("Tempo limite excedido na consulta SGO.");
+      if (error instanceof TypeError) {
+        throw new Error("Nao foi possivel acessar o SGO. Confirme se a VPN esta conectada e tente novamente.");
+      }
       throw error;
     } finally {
       clearTimeout(timeout);

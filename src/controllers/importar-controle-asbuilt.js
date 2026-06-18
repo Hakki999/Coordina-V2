@@ -7,6 +7,7 @@ const {
   listarColunasControle,
   anexarValoresCustomizados,
   colunaFisica,
+  colunaCalculada,
   salvarValoresCustomizados
 } = require("./controle-asbuilt");
 
@@ -62,7 +63,7 @@ function lerCabecalhos(sheet, linhaCabecalho) {
 
 async function analisar(req, res) {
   try {
-    const colunas = await listarColunasControle();
+    const colunas = (await listarColunasControle()).filter(coluna => !colunaCalculada(coluna));
     const workbook = await carregarWorkbook(req);
     const sheetIndex = indiceValido(req.query.sheet);
     const headerRow = indiceValido(req.query.headerRow);
@@ -182,7 +183,7 @@ function separarDados(dados, porCampo) {
   const customizados = [];
   for (const [campo, valor] of Object.entries(dados)) {
     const coluna = porCampo.get(campo);
-    if (!coluna) continue;
+    if (!coluna || colunaCalculada(coluna)) continue;
     if (colunaFisica(coluna)) fisicos[campo] = valor;
     else customizados.push({ coluna, valor });
   }
@@ -192,7 +193,7 @@ function separarDados(dados, porCampo) {
 async function processar(req, res, simular = false) {
   let connection;
   try {
-    const colunas = await listarColunasControle();
+    const colunas = (await listarColunasControle()).filter(coluna => !colunaCalculada(coluna));
     const porCampo = new Map(colunas.map(coluna => [coluna.campo, coluna]));
     const config = prepararConfig(parseConfig(req.query.config), porCampo);
     const workbook = await carregarWorkbook(req);

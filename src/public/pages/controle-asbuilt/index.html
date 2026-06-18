@@ -7,7 +7,7 @@
   <link rel="shortcut icon" href="/common/assets/logoIcon.png" type="image/x-icon">
   <link rel="stylesheet" href="/common/styles/global.css">
   <link rel="stylesheet" href="/common/styles/messages.css">
-  <link rel="stylesheet" href="/pages/controle-asbuilt/style.css?v=visual-config-2">
+  <link rel="stylesheet" href="/pages/controle-asbuilt/style.css?v=formula-columns-1">
 </head>
 <body>
   <div class="app-layout">
@@ -71,6 +71,7 @@
           <label>Tipo<select id="novaColunaTipo"><option value="texto">Texto</option><option value="lista">Lista</option><option value="data">Data</option><option value="numero">Numero</option><option value="moeda">Moeda</option><option value="booleano">Sim/Nao</option></select></label>
           <label id="novaColunaOpcoesLabel" hidden>Opcoes<textarea id="novaColunaOpcoes" rows="2" placeholder="Uma opcao por linha"></textarea></label>
           <label>Valor padrao<input id="novaColunaValorPadrao" placeholder="Usado em novos projetos"></label>
+          <label class="formula-field">Formula calculada<input id="novaColunaFormula" maxlength="1000" placeholder="Ex: =valor-valor_adinatado"><small>Use as chaves das outras colunas. A coluna calculada fica somente para leitura.</small></label>
           <button type="submit">Adicionar coluna</button>
         </form>
         <div id="listaColunasAdmin" class="columns-admin-list"></div>
@@ -167,7 +168,7 @@
 
   <script src="/common/scripts/messages.js"></script>
   <script src="/common/scripts/layout.js"></script>
-  <script src="/pages/medicao/get-sgo/sgo-client.js?v=visual-config-2"></script>
-  <script src="/pages/controle-asbuilt/script.js?v=visual-config-2"></script>
+  <script src="/pages/medicao/get-sgo/sgo-client.js?v=sgo-fetch-2"></script>
+  <script src="/pages/controle-asbuilt/script.js?v=formula-columns-1"></script>
 </body>
 </html>

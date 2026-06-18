@@ -1,5 +1,5 @@
 const db = require("../../models/db");
-const { COLUNAS, listarColunasControle } = require("../controle-asbuilt");
+const { COLUNAS, listarColunasControle, colunaCalculada } = require("../controle-asbuilt");
 const { sanitizeText } = require("../../utils/security");
 
 const CHAVE = "controle_asbuilt";
@@ -96,7 +96,7 @@ function validarEtapas(etapas) {
 
 function validarMapeamentos(mapeamentos, colunas = COLUNAS) {
   if (!Array.isArray(mapeamentos) || mapeamentos.length > 100) return null;
-  const destinos = new Set(colunas.map(coluna => coluna.campo));
+  const destinos = new Set(colunas.filter(coluna => !colunaCalculada(coluna)).map(coluna => coluna.campo));
   const validos = [];
   for (const item of mapeamentos) {
     const destino = sanitizeText(item.destino, 100);
@@ -114,7 +114,7 @@ function validarMapeamentos(mapeamentos, colunas = COLUNAS) {
 }
 
 async function obter(req, res) {
-  const colunas = await listarColunasControle();
+  const colunas = (await listarColunasControle()).filter(coluna => !colunaCalculada(coluna));
   res.json({
     configuracao: await buscar(),
     tiposConsulta: [...TIPOS_PERMITIDOS],
@@ -123,7 +123,7 @@ async function obter(req, res) {
 }
 
 async function salvar(req, res) {
-  const colunas = await listarColunasControle();
+  const colunas = (await listarColunasControle()).filter(coluna => !colunaCalculada(coluna));
   const etapas = validarEtapas(req.body?.etapas);
   const mapeamentos = validarMapeamentos(req.body?.mapeamentos, colunas);
   if (!etapas || !mapeamentos) {

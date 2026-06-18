@@ -34,7 +34,7 @@ function valorInput(valor, tipo) {
 }
 
 function colunasEditaveis() {
-  return colunasAsbuilt.filter(coluna => coluna.campo !== "projeto");
+  return colunasAsbuilt.filter(coluna => coluna.campo !== "projeto" && !coluna.formula);
 }
 
 function opcoesLista(coluna, valorAtual = "") {
@@ -83,6 +83,14 @@ function registrosFiltrados() {
 
 function inputCelula(registro, coluna) {
   const readonly = podeEditarAsbuilt ? "" : " disabled";
+  if (coluna.formula) {
+    const valor = coluna.tipo === "moeda" && registro[coluna.campo] !== null && registro[coluna.campo] !== undefined
+      ? Number(registro[coluna.campo]).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
+      : valorInput(registro[coluna.campo], coluna.tipo);
+    return `<td><input class="calculated-input" type="text" readonly
+      data-calculated-field="${coluna.campo}" title="${escapar(coluna.formula)}"
+      aria-label="${escapar(coluna.titulo)}" value="${escapar(valor)}"></td>`;
+  }
   if (coluna.tipo === "booleano") {
     return `<td class="boolean-cell"><input class="sheet-input sheet-check" type="checkbox"${readonly}
       data-id="${registro.id}" data-field="${coluna.campo}" aria-label="${escapar(coluna.titulo)}"
@@ -123,7 +131,10 @@ function renderizarCabecalho() {
       </tr>
       <tr class="excel-filter-row">
         <th class="row-control"><button id="btnLimparFiltros" type="button" title="Limpar filtros">×</button></th>
-        ${colunas.map(coluna => `<th><input class="excel-filter" data-filter-field="${coluna.campo}" placeholder="Filtrar ▾" value="${escapar(filtrosColuna.get(coluna.campo) || "")}"></th>`).join("")}
+        ${colunas.map(coluna => coluna.formula
+          ? '<th><input class="excel-filter" placeholder="Calculada" disabled></th>'
+          : `<th><input class="excel-filter" data-filter-field="${coluna.campo}" placeholder="Filtrar ▾" value="${escapar(filtrosColuna.get(coluna.campo) || "")}"></th>`
+        ).join("")}
         <th class="save-cell"></th>
       </tr>
     </thead>
@@ -135,6 +146,7 @@ function renderizarCabecalho() {
 function prepararAutocompleteFiltros() {
   document.querySelectorAll(".excel-filter").forEach(input => {
     const campo = input.dataset.filterField;
+    if (!campo) return;
     const listaId = `sugestoes-${campo}`;
     input.setAttribute("list", listaId);
     input.setAttribute("autocomplete", "off");
@@ -195,7 +207,18 @@ async function salvarCelula(id, campo, valor) {
       method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ campo, valor })
     });
     const registro = registrosAsbuilt.find(item => Number(item.id) === Number(id));
-    if (registro) registro[campo] = data.valor;
+    if (registro) {
+      if (data.registro) Object.assign(registro, data.registro);
+      else registro[campo] = data.valor;
+      const linha = document.querySelector(`[data-row-id="${id}"]`);
+      linha?.querySelectorAll("[data-calculated-field]").forEach(input => {
+        const coluna = colunasAsbuilt.find(item => item.campo === input.dataset.calculatedField);
+        const calculado = registro[input.dataset.calculatedField];
+        input.value = coluna?.tipo === "moeda" && calculado !== null && calculado !== undefined
+          ? Number(calculado).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
+          : valorInput(calculado, coluna?.tipo);
+      });
+    }
     marcarEstado(id, "salvo", "Salvo");
   } catch (error) {
     marcarEstado(id, "erro", "Erro");
@@ -246,10 +269,10 @@ async function carregarRegistros(pagina = paginacaoAsbuilt.pagina) {
   definirCarga("Carregando...");
   try {
     const data = await requisicao(`/api/controle-asbuilt?${parametrosConsulta(pagina).toString()}`);
-    const assinaturaAnterior = todasColunas().map(coluna => `${coluna.campo}:${coluna.titulo}:${coluna.tipo}`).join("|");
+    const assinaturaAnterior = todasColunas().map(coluna => `${coluna.campo}:${coluna.titulo}:${coluna.tipo}:${coluna.formula || ""}`).join("|");
     colunasAsbuilt = data.colunas;
     colunasMeta = data.colunasMeta || [];
-    const assinaturaNova = todasColunas().map(coluna => `${coluna.campo}:${coluna.titulo}:${coluna.tipo}`).join("|");
+    const assinaturaNova = todasColunas().map(coluna => `${coluna.campo}:${coluna.titulo}:${coluna.tipo}:${coluna.formula || ""}`).join("|");
     registrosAsbuilt = data.registros;
     paginacaoAsbuilt = data.paginacao || paginacaoAsbuilt;
     carregarPreferenciaColunas();
@@ -405,17 +428,19 @@ function renderizarAdminColunas() {
     <details class="column-admin-row" data-column-field="${escapar(coluna.campo)}">
       <summary>
         <span><strong>${escapar(coluna.titulo)}</strong><small>${escapar(coluna.campo)}</small></span>
-        <span class="column-tags"><b>${escapar(coluna.tipo)}</b>${coluna.obrigatoria ? "<b>obrigatoria</b>" : ""}${coluna.sistema ? "<b>padrao</b>" : ""}</span>
+        <span class="column-tags"><b>${escapar(coluna.tipo)}</b>${coluna.obrigatoria ? "<b>obrigatoria</b>" : ""}${coluna.sistema ? "<b>padrao</b>" : ""}${coluna.formula ? "<b>calculada</b>" : ""}</span>
       </summary>
       <div class="validation-editor">
         <label>Titulo<input data-column-title value="${escapar(coluna.titulo)}" maxlength="120"></label>
         <label>Tipo<select data-column-type ${coluna.sistema && !["texto", "lista"].includes(coluna.tipo) ? "disabled" : ""}>${opcoesTipoColuna(coluna.tipo)}</select></label>
         <label>Largura<input data-column-width type="number" min="70" max="480" value="${Number(coluna.largura) || 140}"></label>
         <label class="validation-options" ${coluna.tipo === "lista" ? "" : "hidden"}>Opcoes da lista<textarea data-column-options rows="3" placeholder="Uma opcao por linha">${escapar(textoOpcoes(coluna))}</textarea></label>
-        <label>Valor padrao<input data-column-default value="${escapar(coluna.valorPadrao || "")}" placeholder="Usado ao criar projeto"></label>
-        <label class="check-option"><input data-column-required type="checkbox" ${coluna.obrigatoria ? "checked" : ""} ${coluna.campo === "projeto" ? "disabled" : ""}> Exigir valor ao editar</label>
+        <label>Valor padrao<input data-column-default value="${escapar(coluna.valorPadrao || "")}" placeholder="Usado ao criar projeto" ${coluna.formula ? "disabled" : ""}></label>
+        <label class="formula-field">Formula calculada<input data-column-formula value="${escapar(coluna.formula || "")}" maxlength="1000" placeholder="Ex: =valor-valor_adinatado" ${coluna.sistema ? "disabled" : ""}><small>Use as chaves mostradas abaixo dos titulos.</small></label>
+        <label class="check-option"><input data-column-required type="checkbox" ${coluna.obrigatoria ? "checked" : ""} ${coluna.campo === "projeto" || coluna.formula ? "disabled" : ""}> Exigir valor ao editar</label>
         <div class="validation-actions">
-          ${coluna.sistema ? '<span class="system-badge">Coluna padrao</span>' : '<button type="button" class="btn-danger" data-delete-column>Excluir coluna</button>'}
+          ${coluna.sistema ? '<span class="system-badge">Coluna padrao</span>' : ""}
+          ${coluna.campo === "projeto" ? "" : `<button type="button" class="btn-danger" data-delete-column>${coluna.sistema ? "Ocultar coluna" : "Excluir coluna"}</button>`}
           <button type="button" data-save-column>Salvar alteracoes</button>
         </div>
       </div>
@@ -430,6 +455,7 @@ function dadosColunaDaLinha(linha) {
     largura: Number(linha.querySelector("[data-column-width]").value),
     obrigatoria: linha.querySelector("[data-column-required]").checked,
     valorPadrao: linha.querySelector("[data-column-default]").value,
+    formula: linha.querySelector("[data-column-formula]").value,
     opcoes: linha.querySelector("[data-column-options]").value.split(/\r?\n|;/).map(item => item.trim()).filter(Boolean)
   };
 }
@@ -449,7 +475,11 @@ async function salvarColuna(linha) {
 }
 
 async function excluirColuna(campo) {
-  if (!confirm("Excluir esta coluna do controle de As-Built?")) return;
+  const coluna = colunasAsbuilt.find(item => item.campo === campo);
+  const pergunta = coluna?.sistema
+    ? "Ocultar esta coluna padrao do controle de As-Built?"
+    : "Excluir esta coluna e todos os valores armazenados nela?";
+  if (!confirm(pergunta)) return;
   const data = await requisicao(`/api/controle-asbuilt/colunas/${encodeURIComponent(campo)}`, { method: "DELETE" });
   camposVisiveis.delete(campo);
   localStorage.setItem(CHAVE_COLUNAS, JSON.stringify([...camposVisiveis]));
@@ -468,6 +498,7 @@ async function criarColuna(event) {
       campo: document.getElementById("novaColunaCampo").value,
       tipo: document.getElementById("novaColunaTipo").value,
       valorPadrao: document.getElementById("novaColunaValorPadrao").value,
+      formula: document.getElementById("novaColunaFormula").value,
       opcoes: document.getElementById("novaColunaOpcoes").value.split(/\r?\n|;/).map(item => item.trim()).filter(Boolean)
     })
   });

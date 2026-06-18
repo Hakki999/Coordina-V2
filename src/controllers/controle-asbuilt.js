@@ -2,6 +2,11 @@ const fs = require("fs/promises");
 const path = require("path");
 const db = require("../models/db");
 const { sanitizeText } = require("../utils/security");
+const {
+  compilarFormula,
+  validarDependenciasFormulas,
+  aplicarFormulas
+} = require("../utils/formula");
 
 const STORAGE_DIR = path.resolve(__dirname, "../../storage/asbuilt-pendentes");
 
@@ -117,6 +122,7 @@ function normalizarColuna(linha) {
     obrigatoria: Boolean(linha.obrigatoria ?? base.obrigatoria),
     opcoes: parseOpcoes(linha.opcoes_json ?? linha.opcoes ?? base.opcoes),
     valorPadrao: linha.valor_padrao ?? base.valorPadrao ?? null,
+    formula: linha.formula ?? base.formula ?? null,
     sistema: Boolean(linha.sistema ?? base.sistema),
     ativa: linha.ativa !== 0 && linha.ativa !== false,
     ordem: Number.isInteger(Number(linha.ordem)) ? Number(linha.ordem) : base.ordem || 999
@@ -127,7 +133,7 @@ async function listarColunasControle(opcoes = {}, executor = db) {
   const incluirInativas = Boolean(opcoes.incluirInativas);
   try {
     const [rows] = await executor.execute(`
-      SELECT id, campo, titulo, tipo, limite, largura, obrigatoria, opcoes_json, valor_padrao,
+      SELECT id, campo, titulo, tipo, limite, largura, obrigatoria, opcoes_json, valor_padrao, formula,
         sistema, ativa, ordem, criado_em, atualizado_em
       FROM controle_asbuilt_colunas
       ORDER BY ordem, id
@@ -157,6 +163,10 @@ async function mapaColunas(opcoes = {}, executor = db) {
 
 function colunaFisica(coluna) {
   return coluna?.sistema && COLUNAS_SISTEMA.has(coluna.campo);
+}
+
+function colunaCalculada(coluna) {
+  return Boolean(coluna?.formula);
 }
 
 function normalizarData(valor) {
@@ -243,30 +253,31 @@ function observacaoAutomatica(pendente, solicitacao) {
 
 async function anexarValoresCustomizados(registros, colunas, executor = db) {
   const ids = registros.map(registro => Number(registro.id)).filter(Boolean);
-  const customizadas = colunas.filter(coluna => !colunaFisica(coluna));
-  if (!ids.length || !customizadas.length) return registros;
+  const customizadas = colunas.filter(coluna => !colunaFisica(coluna) && !colunaCalculada(coluna));
+  if (ids.length && customizadas.length) {
+    const idPlaceholders = ids.map(() => "?").join(", ");
+    const campos = customizadas.map(coluna => coluna.campo);
+    const campoPlaceholders = campos.map(() => "?").join(", ");
+    const [valores] = await executor.execute(`
+      SELECT v.registro_id, c.campo, v.valor_texto
+      FROM controle_asbuilt_valores v
+      INNER JOIN controle_asbuilt_colunas c ON c.id = v.coluna_id
+      WHERE v.registro_id IN (${idPlaceholders})
+        AND c.campo IN (${campoPlaceholders})
+    `, [...ids, ...campos]);
 
-  const idPlaceholders = ids.map(() => "?").join(", ");
-  const campos = customizadas.map(coluna => coluna.campo);
-  const campoPlaceholders = campos.map(() => "?").join(", ");
-  const [valores] = await executor.execute(`
-    SELECT v.registro_id, c.campo, v.valor_texto
-    FROM controle_asbuilt_valores v
-    INNER JOIN controle_asbuilt_colunas c ON c.id = v.coluna_id
-    WHERE v.registro_id IN (${idPlaceholders})
-      AND c.campo IN (${campoPlaceholders})
-  `, [...ids, ...campos]);
-
-  const porId = new Map(registros.map(registro => [Number(registro.id), registro]));
-  for (const item of valores) {
-    const registro = porId.get(Number(item.registro_id));
-    if (registro) registro[item.campo] = item.valor_texto;
+    const porId = new Map(registros.map(registro => [Number(registro.id), registro]));
+    for (const item of valores) {
+      const registro = porId.get(Number(item.registro_id));
+      if (registro) registro[item.campo] = item.valor_texto;
+    }
   }
-  return registros;
+  return aplicarFormulas(registros, colunas);
 }
 
 async function salvarValorCustomizado(executor, registroId, coluna, valor) {
   if (!coluna?.id) throw erroValidacao("Coluna personalizada sem cadastro.");
+  if (colunaCalculada(coluna)) throw erroValidacao("Colunas calculadas sao somente para leitura.");
   const texto = valorCustomizado(valor);
   if (texto === null) {
     await executor.execute(
@@ -321,6 +332,7 @@ function like(valor) {
 }
 
 function filtroSqlParaCampo(coluna, valor, params) {
+  if (colunaCalculada(coluna)) return null;
   if (colunaFisica(coluna)) {
     params.push(like(valor));
     return `CAST(a.${coluna.campo} AS CHAR) LIKE ? ESCAPE '\\\\'`;
@@ -355,16 +367,18 @@ function montarWhere(req, colunas) {
   if (busca) {
     const termos = [];
     for (const coluna of todas) {
-      termos.push(filtroSqlParaCampo(coluna, busca, params));
+      const termo = filtroSqlParaCampo(coluna, busca, params);
+      if (termo) termos.push(termo);
     }
-    where.push(`(${termos.join(" OR ")})`);
+    if (termos.length) where.push(`(${termos.join(" OR ")})`);
   }
 
   for (const [campo, valorOriginal] of Object.entries(parseFiltros(req.query.filtros)).slice(0, 40)) {
     const valor = sanitizeText(valorOriginal, 120);
     const coluna = porCampo.get(campo);
-    if (!valor || !coluna) continue;
-    where.push(filtroSqlParaCampo(coluna, valor, params));
+    if (!valor || !coluna || colunaCalculada(coluna)) continue;
+    const filtro = filtroSqlParaCampo(coluna, valor, params);
+    if (filtro) where.push(filtro);
   }
 
   return { where: where.join(" AND "), params };
@@ -451,6 +465,7 @@ async function criar(req, res) {
     };
     const dados = { ...dadosAutomaticos, ...informados, projeto };
     for (const coluna of colunas) {
+      if (colunaCalculada(coluna)) continue;
       const vazio = dados[coluna.campo] === null || dados[coluna.campo] === undefined || String(dados[coluna.campo]).trim() === "";
       if (vazio && coluna.valorPadrao !== null && coluna.valorPadrao !== undefined && String(coluna.valorPadrao) !== "") {
         dados[coluna.campo] = coluna.valorPadrao;
@@ -461,7 +476,7 @@ async function criar(req, res) {
     const customizados = [];
     for (const [campo, valorOriginal] of Object.entries(dados)) {
       const coluna = porCampo.get(campo);
-      if (!coluna) continue;
+      if (!coluna || colunaCalculada(coluna)) continue;
       const valor = normalizarValor(coluna, valorOriginal, { validarObrigatoria: false });
       if (colunaFisica(coluna)) {
         campos.push(coluna.campo);
@@ -517,6 +532,7 @@ async function atualizar(req, res) {
   const { porCampo } = await mapaColunas();
   const coluna = porCampo.get(String(req.body?.campo || ""));
   if (!id || !coluna) return res.status(400).json({ error: "Campo ou registro invalido." });
+  if (colunaCalculada(coluna)) return res.status(400).json({ error: "Colunas calculadas sao somente para leitura." });
   const valor = normalizarValor(coluna, req.body.valor);
 
   if (colunaFisica(coluna)) {
@@ -543,7 +559,8 @@ async function atualizar(req, res) {
       req.usuario.regional
     ]);
   }
-  res.json({ message: "Alteracao salva.", campo: coluna.campo, valor });
+  const registro = await buscarRegistro(id, req.usuario.regional);
+  res.json({ message: "Alteracao salva.", campo: coluna.campo, valor, registro });
 }
 
 async function atualizarDados(req, res) {
@@ -560,7 +577,7 @@ async function atualizarDados(req, res) {
   for (const [campo, valorOriginal] of Object.entries(dados)) {
     if (camposPermitidos && !camposPermitidos.has(campo)) continue;
     const coluna = porCampo.get(campo);
-    if (!coluna || campo === "projeto") continue;
+    if (!coluna || campo === "projeto" || colunaCalculada(coluna)) continue;
     const valor = normalizarValor(coluna, valorOriginal);
     if (colunaFisica(coluna)) {
       atualizacoes.push(`${campo} = ?`);
@@ -621,7 +638,7 @@ async function atualizarColunas(req, res) {
   const customizados = [];
   for (const [campo, valorOriginal] of Object.entries(dados).slice(0, 30)) {
     const coluna = porCampo.get(campo);
-    if (!coluna || campo === "projeto") continue;
+    if (!coluna || campo === "projeto" || colunaCalculada(coluna)) continue;
     const valor = normalizarValor(coluna, valorOriginal);
     if (colunaFisica(coluna)) {
       atualizacoes.push(`${campo} = ?`);
@@ -710,9 +727,21 @@ function normalizarDefinicaoColuna(body, existente = null) {
     valorPadrao: body?.valorPadrao === undefined
       ? existente?.valorPadrao ?? null
       : sanitizeText(body.valorPadrao, 4000) || null,
+    formula: body?.formula === undefined
+      ? existente?.formula ?? null
+      : sanitizeText(body.formula, 1000) || null,
     ativa: body?.ativa === undefined ? true : !(body.ativa === false || body.ativa === 0 || body.ativa === "0"),
     sistema
   };
+  if (definicao.formula) {
+    if (definicao.sistema) throw erroValidacao("Crie uma coluna personalizada para usar formulas.");
+    if (!["texto", "numero", "moeda"].includes(definicao.tipo)) {
+      throw erroValidacao("Formulas podem ser usadas apenas em colunas de texto, numero ou moeda.");
+    }
+    compilarFormula(definicao.formula);
+    definicao.valorPadrao = null;
+    definicao.obrigatoria = false;
+  }
   if (definicao.valorPadrao !== null) {
     definicao.valorPadrao = normalizarValor({ ...definicao, obrigatoria: false }, definicao.valorPadrao, {
       validarObrigatoria: false
@@ -730,15 +759,17 @@ async function criarColuna(req, res) {
   if (COLUNAS_SISTEMA.has(definicao.campo)) {
     return res.status(409).json({ error: "Ja existe uma coluna padrao com essa chave." });
   }
+  const existentes = await listarColunasControle({ incluirInativas: true });
+  validarDependenciasFormulas([...existentes.filter(coluna => coluna.campo !== definicao.campo), definicao]);
   const [[maxOrdem]] = await db.execute("SELECT COALESCE(MAX(ordem), 0) AS ordem FROM controle_asbuilt_colunas");
   try {
     await db.execute(`
       INSERT INTO controle_asbuilt_colunas
-        (campo, titulo, tipo, limite, largura, obrigatoria, opcoes_json, valor_padrao, sistema, ativa, ordem, criado_por, atualizado_por)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?)
+        (campo, titulo, tipo, limite, largura, obrigatoria, opcoes_json, valor_padrao, formula, sistema, ativa, ordem, criado_por, atualizado_por)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?)
       ON DUPLICATE KEY UPDATE titulo = VALUES(titulo), tipo = VALUES(tipo), limite = VALUES(limite),
         largura = VALUES(largura), obrigatoria = VALUES(obrigatoria), opcoes_json = VALUES(opcoes_json),
-        valor_padrao = VALUES(valor_padrao), ativa = 1, atualizado_por = VALUES(atualizado_por)
+        valor_padrao = VALUES(valor_padrao), formula = VALUES(formula), ativa = 1, atualizado_por = VALUES(atualizado_por)
     `, [
       definicao.campo,
       definicao.titulo,
@@ -748,6 +779,7 @@ async function criarColuna(req, res) {
       definicao.obrigatoria ? 1 : 0,
       JSON.stringify(definicao.opcoes),
       definicao.valorPadrao,
+      definicao.formula,
       definicao.ativa ? 1 : 0,
       Number(maxOrdem?.ordem || 0) + 10,
       req.usuario.id,
@@ -766,10 +798,12 @@ async function atualizarColuna(req, res) {
   const existente = porCampo.get(campo);
   if (!existente) return res.status(404).json({ error: "Coluna nao encontrada." });
   const definicao = normalizarDefinicaoColuna(req.body, existente);
+  const todas = await listarColunasControle({ incluirInativas: true });
+  validarDependenciasFormulas(todas.map(coluna => coluna.campo === campo ? definicao : coluna));
   await db.execute(`
     UPDATE controle_asbuilt_colunas
     SET titulo = ?, tipo = ?, limite = ?, largura = ?, obrigatoria = ?,
-      opcoes_json = ?, valor_padrao = ?, ativa = ?, atualizado_por = ?
+      opcoes_json = ?, valor_padrao = ?, formula = ?, ativa = ?, atualizado_por = ?
     WHERE campo = ?
   `, [
     definicao.titulo,
@@ -779,6 +813,7 @@ async function atualizarColuna(req, res) {
     definicao.obrigatoria ? 1 : 0,
     JSON.stringify(definicao.opcoes),
     definicao.valorPadrao,
+    definicao.formula,
     definicao.ativa ? 1 : 0,
     req.usuario.id,
     campo
@@ -791,6 +826,14 @@ async function excluirColuna(req, res) {
   const { porCampo } = await mapaColunas({ incluirInativas: true });
   const coluna = porCampo.get(campo);
   if (!coluna || campo === "projeto") return res.status(400).json({ error: "Coluna invalida." });
+  const dependentes = [...porCampo.values()].filter(item =>
+    item.ativa && item.formula && compilarFormula(item.formula).referencias.includes(campo)
+  );
+  if (dependentes.length) {
+    return res.status(409).json({
+      error: `A coluna e usada nas formulas: ${dependentes.map(item => item.titulo).join(", ")}. Remova essas referencias primeiro.`
+    });
+  }
   if (coluna.sistema) {
     await db.execute("UPDATE controle_asbuilt_colunas SET ativa = 0, atualizado_por = ? WHERE campo = ?", [
       req.usuario.id,
@@ -809,6 +852,7 @@ async function sugestoesFiltro(req, res) {
   const { porCampo } = await mapaColunas();
   const coluna = porCampo.get(campo) || CAMPOS_META.get(campo);
   if (!coluna) return res.status(404).json({ error: "Coluna nao encontrada." });
+  if (colunaCalculada(coluna)) return res.json({ sugestoes: [] });
   if (coluna.tipo === "lista" && coluna.opcoes?.length) {
     const termo = busca.toLocaleLowerCase("pt-BR");
     return res.json({
@@ -881,6 +925,7 @@ module.exports = {
   listarColunasControle,
   anexarValoresCustomizados,
   colunaFisica,
+  colunaCalculada,
   salvarValoresCustomizados,
   buscarRegistro,
   listar,

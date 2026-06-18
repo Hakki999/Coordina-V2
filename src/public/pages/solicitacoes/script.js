@@ -49,7 +49,7 @@ function normalizarTexto(valor) {
     .replace(/[\u0300-\u036f]/g, "");
 }
 
-function formatarData(data) {
+function formatarData(data, horario = false) {
   if (!data) return "-";
 
   const dataLimpa = String(data).split("T")[0];
@@ -57,6 +57,11 @@ function formatarData(data) {
 
   if (partes.length !== 3) {
     return dataLimpa;
+  }
+
+  if (horario) {
+    const horario = String(data).split("T")[1]?.substring(0, 5) || "";
+    return `${partes[2]}/${partes[1]}/${partes[0]} ${horario}`;
   }
 
   return `${partes[2]}/${partes[1]}/${partes[0]}`;
@@ -398,7 +403,7 @@ function abrirMateriaisSolicitados(id) {
 
     <div class="resumo-item">
       <span>Criado em</span>
-      <strong>${formatarData(solicitacao.criado_em)}</strong>
+      <strong>${formatarData(solicitacao.criado_em, true)}</strong>
     </div>
   `;
 

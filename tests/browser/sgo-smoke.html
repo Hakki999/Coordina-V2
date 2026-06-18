@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>SGO browser smoke test</title>
+</head>
+<body>
+  <output id="status" data-state="running">Consultando...</output>
+  <script src="/src/public/pages/medicao/get-sgo/sgo-client.js"></script>
+  <script>
+    window.addEventListener("load", async () => {
+      const status = document.getElementById("status");
+      try {
+        await window.sgoClient.consultarSgo("Notas", "0");
+        status.dataset.state = "transport-ok";
+        status.textContent = "SGO respondeu com sucesso.";
+      } catch (error) {
+        const respondeu = String(error.message).startsWith("SGO respondeu HTTP");
+        status.dataset.state = respondeu ? "transport-ok" : "transport-failed";
+        status.textContent = error.message;
+      }
+    });
+  </script>
+</body>
+</html>

@@ -114,6 +114,18 @@ async function migrate() {
     VALUES ('MBL', 'Montes Belos'), ('MHS', 'Morrinhos')
     ON DUPLICATE KEY UPDATE nome = VALUES(nome)
   `);
+  await db.query(`
+    INSERT IGNORE INTO regionais (codigo, nome)
+    SELECT regional, regional
+    FROM (
+      SELECT DISTINCT CAST(regional AS CHAR) AS regional FROM usuarios
+      UNION
+      SELECT DISTINCT CAST(regional AS CHAR) AS regional FROM config_listas_materiais
+      UNION
+      SELECT DISTINCT CAST(regional AS CHAR) AS regional FROM materiais_solicitados
+    ) regionais_existentes
+    WHERE regional IS NOT NULL AND TRIM(regional) <> ''
+  `);
 
   await db.query(`
     CREATE TABLE IF NOT EXISTS controle_asbuilt (
@@ -175,6 +187,7 @@ async function migrate() {
       obrigatoria TINYINT(1) NOT NULL DEFAULT 0,
       opcoes_json LONGTEXT NULL,
       valor_padrao TEXT NULL,
+      formula TEXT NULL,
       sistema TINYINT(1) NOT NULL DEFAULT 0,
       ativa TINYINT(1) NOT NULL DEFAULT 1,
       ordem INT NOT NULL DEFAULT 0,
@@ -190,6 +203,9 @@ async function migrate() {
 
   if (!(await columnExists("controle_asbuilt_colunas", "valor_padrao"))) {
     await db.query("ALTER TABLE controle_asbuilt_colunas ADD COLUMN valor_padrao TEXT NULL AFTER opcoes_json");
+  }
+  if (!(await columnExists("controle_asbuilt_colunas", "formula"))) {
+    await db.query("ALTER TABLE controle_asbuilt_colunas ADD COLUMN formula TEXT NULL AFTER valor_padrao");
   }
 
   await db.query(`

@@ -1,6 +1,6 @@
 const db = require("../../models/db");
 const { sanitizeText } = require("../../utils/security");
-const { listarColunasControle, colunaFisica } = require("../controle-asbuilt");
+const { listarColunasControle, colunaFisica, colunaCalculada } = require("../controle-asbuilt");
 
 const PESSOA_SQL = "COALESCE(NULLIF(TRIM(a.projetista), ''), NULLIF(TRIM(a.responsavel), ''), 'Sem responsavel')";
 const OPERADORES = new Set(["contem", "igual", "vazio", "preenchido", "maior_igual", "menor_igual"]);
@@ -72,7 +72,7 @@ function montarWhere(regional, filtros, porCampo) {
 
 async function resumo(req, res) {
   const regional = req.usuario.regional;
-  const colunas = await listarColunasControle();
+  const colunas = (await listarColunasControle()).filter(coluna => !colunaCalculada(coluna));
   const porCampo = new Map(colunas.map(coluna => [coluna.campo, coluna]));
   const filtros = parseFiltros(req.query.filtros);
   const where = montarWhere(regional, filtros, porCampo);

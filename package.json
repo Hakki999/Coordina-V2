@@ -4,7 +4,7 @@
   "description": "Controle de solicitações de materiais",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --test"
   },
   "author": "José Miguel Barcelos Oliveira",
   "license": "ISC",
