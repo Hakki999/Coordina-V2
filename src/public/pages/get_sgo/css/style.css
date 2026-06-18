@@ -1,0 +1,249 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
+
+:root{
+    --primaryColor: #000814;
+    --secundaryColor: #002855;
+    --thirdColor: #1b263b;
+    --emphasisColor: #0888ff;
+    --fontColor: #f8f9fa;
+}
+
+*{
+    margin: 0px;
+    padding: 0px;
+}
+
+body{
+    width: 100vw;
+    height: 100vh;
+    background-color: var(--thirdColor);
+    color: var(--fontColor);
+
+    font-family: "Open Sans", sans-serif;
+}
+
+#navBar{
+    width: 15%;
+    min-width: 250px;
+    height: 100%;
+    position: fixed;
+    left: 0px;
+    top: 0px;
+    background-color: var(--primaryColor);
+    box-shadow: 1px 0px 10px var(--primaryColor);
+    animation: slideInLeft 0.5s ease-out;
+    font-size: 13px;
+}
+
+#thead{
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid color-mix(in srgb, var(--fontColor) 50%, transparent);
+}
+
+#thead img{
+    height: 40px;
+    width: auto;
+}
+
+.menu{
+    margin-top: 20px;
+    margin-left: 20px;
+}
+
+.menu ul {
+    list-style: none;
+    margin: 5px;
+    padding: 0;
+}
+
+.menu ul ul {
+    margin-left: 20px;
+    padding-left: 10px;
+}
+
+/* ITENS PRINCIPAIS DO MENU */
+.optionNav {
+    list-style: none;
+    cursor: pointer;
+    padding: 8px 0;
+    position: relative;
+    transition: all 0.3s ease;
+    margin-bottom: 5px;
+}
+
+
+/* Estados do submenu */
+.optionNav.closeOption > ul {
+    display: none;
+}
+
+/* Animação de fechamento do submenu */
+.optionNav.closing > ul {
+    animation: slideUp 0.3s ease forwards;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+        max-height: 500px;
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-10px);
+        max-height: 0;
+    }
+}
+
+/* Efeitos hover nos itens principais */
+.optionNav:hover {
+    color: var(--emphasisColor);
+    transform: translateX(5px);
+}
+
+/* ITENS DO SUBMENU */
+.menu ul ul li {
+    list-style: none;
+    cursor: pointer;
+    padding: 6px 0;
+    padding-left: 15px;
+    margin: 2px 0;
+    border-left: 2px solid transparent;
+    transition: all 0.2s ease;
+    animation: fadeInLeft 0.3s ease forwards;
+    opacity: 0;
+    transform: translateX(-10px);
+}
+
+/* Animação em cascata para itens do submenu */
+.optionNav.openOption > ul li:nth-child(1) { animation-delay: 0.05s; }
+.optionNav.openOption > ul li:nth-child(2) { animation-delay: 0.1s; }
+.optionNav.openOption > ul li:nth-child(3) { animation-delay: 0.15s; }
+.optionNav.openOption > ul li:nth-child(4) { animation-delay: 0.2s; }
+.optionNav.openOption > ul li:nth-child(5) { animation-delay: 0.25s; }
+
+@keyframes fadeInLeft {
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Efeitos hover nos itens do submenu */
+.menu ul ul li:hover {
+    color: var(--emphasisColor);
+    border-left-color: var(--emphasisColor);
+    transform: translateX(5px);
+    background: color-mix(in srgb, var(--emphasisColor) 10%, transparent);
+    border-radius: 4px;
+}
+
+/* Indicador visual para itens ativos */
+.optionNav::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: -20px;
+    width: 4px;
+    height: 0;
+    background: var(--emphasisColor);
+    transition: all 0.3s ease;
+    transform: translateY(-50%);
+    border-radius: 0 4px 4px 0;
+}
+
+.optionNav:hover::after,
+.optionNav.openOption::after {
+    height: 60%;
+}
+
+/* Animação de entrada da navbar */
+@keyframes slideInLeft {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Efeito de pulso para itens ativos */
+.optionNav.active {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        background: color-mix(in srgb, var(--emphasisColor) 5%, transparent);
+    }
+    50% {
+        background: color-mix(in srgb, var(--emphasisColor) 15%, transparent);
+    }
+    100% {
+        background: color-mix(in srgb, var(--emphasisColor) 5%, transparent);
+    }
+}
+
+/* Transições suaves */
+.menu * {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    #navBar {
+        width: 100%;
+        min-width: auto;
+        height: auto;
+        position: relative;
+        animation: slideInUp 0.4s ease-out;
+    }
+    
+    @keyframes slideInUp {
+        from {
+            transform: translateY(-100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+    
+    .menu {
+        margin: 10px;
+    }
+    
+    .optionNav {
+        padding: 12px 0;
+    }
+}
+
+/* Melhorias de acessibilidade */
+.optionNav:focus {
+    outline: 2px solid var(--emphasisColor);
+    outline-offset: 2px;
+}
+
+.menu ul ul li:focus {
+    outline: 1px solid var(--emphasisColor);
+    outline-offset: 1px;
+}
+
+/* Smooth scrolling para toda a página */
+html {
+    scroll-behavior: smooth;
+}
+
+.menuSelected{
+    color: var(--emphasisColor);
+    border-left-color: var(--emphasisColor);
+    transform: translateX(5px);
+    background: color-mix(in srgb, var(--emphasisColor) 10%, transparent);
+    border-radius: 4px;
+}

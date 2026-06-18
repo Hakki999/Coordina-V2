@@ -69,7 +69,8 @@ function formatarStatus(status) {
     pendente: "Pendente",
     separado: "Separado",
     entregue: "Entregue",
-    cancelado: "Cancelado"
+    cancelado: "Cancelado",
+    concluido: "Concluído"
   };
 
   return nomes[valor] || status;
@@ -86,12 +87,12 @@ function pegarIdSolicitacao(item) {
 
 function podeCancelarSolicitacao(status) {
   return Boolean(usuarioAtual)
-    && status !== "cancelado"
-    && ["admin", "almoxarifado", "programacao"].includes(usuarioAtual.tipo_usuario);
+    && !["cancelado", "concluido"].includes(status)
+    && usuarioAtual.permissoes?.includes("logistica.solicitacoes.cancelar");
 }
 
 function podeEditarQuantidades() {
-  return usuarioAtual?.tipo_usuario === "almoxarifado";
+  return usuarioAtual?.permissoes?.includes("logistica.solicitacoes.operar");
 }
 
 function normalizarSolicitacoes(rows) {
@@ -283,6 +284,7 @@ function renderizarSolicitacoes() {
 
     tr.dataset.id = item.id;
     if (item.status === "cancelado") tr.classList.add("linha-cancelada");
+    if (item.status === "concluido") tr.classList.add("linha-concluida");
     const podeCancelar = podeCancelarSolicitacao(item.status);
 
     tr.innerHTML = `
@@ -353,9 +355,9 @@ function abrirMateriaisSolicitados(id) {
   }
 
   resumoSolicitacao.innerHTML = `
-    ${solicitacao.status === "cancelado" ? `
+    ${["cancelado", "concluido"].includes(solicitacao.status) ? `
       <div class="cancelamento-alerta">
-        Solicitação cancelada${solicitacao.cancelado_em ? ` em ${formatarData(solicitacao.cancelado_em)}` : ""}.
+        Solicitação ${solicitacao.status === "concluido" ? "concluída após cancelamento" : "cancelada"}${solicitacao.cancelado_em ? ` em ${formatarData(solicitacao.cancelado_em)}` : ""}.
         O registro permanece disponível para consulta.
       </div>
     ` : ""}
@@ -425,6 +427,10 @@ function renderizarMateriaisModal(materiais) {
     const tr = document.createElement("tr");
     const podeEditar = podeEditarQuantidades();
 
+
+    material.quantidade_lib = material.quantidade_lib == 0.00 ? "" : material.quantidade_lib;
+    material.quantidade_dev = material.quantidade_dev == 0.00 ? "" : material.quantidade_dev;
+
     tr.innerHTML = `
       <td data-label="Código">${escaparHTML(material.codigo_material || "-")}</td>
       <td data-label="Descrição">${escaparHTML(material.descricao || "-")}</td>
@@ -472,6 +478,7 @@ function configurarSalvamentoAutomatico(material, linha) {
   };
 
   [liberada, devolvida].forEach(input => {
+
     input.addEventListener("input", agendar);
     input.addEventListener("change", () => {
       clearTimeout(timersSalvamento.get(material.id));
@@ -495,17 +502,20 @@ async function atualizarQuantidadesItem(material, linha) {
   const estado = linha.querySelector(".estado-salvamento");
   const inputLiberada = linha.querySelector(".input-liberada");
   const inputDevolvida = linha.querySelector(".input-devolvida");
-  const quantidadeLib = Number(inputLiberada.value);
-  const quantidadeDev = Number(inputDevolvida.value);
+  let quantidadeLib = Number(inputLiberada.value);
+  let quantidadeDev = Number(inputDevolvida.value);
 
-  if (inputLiberada.value === "" || inputDevolvida.value === ""
-    || !Number.isFinite(quantidadeLib) || !Number.isFinite(quantidadeDev)
+  if (
+    !Number.isFinite(quantidadeLib) || !Number.isFinite(quantidadeDev)
     || quantidadeLib < 0 || quantidadeDev < 0
      || quantidadeDev > quantidadeLib) {
     estado.className = "estado-salvamento erro";
     estado.textContent = "Valor inválido";
     return;
   }
+
+  quantidadeLib = quantidadeLib == "" ? 0 : quantidadeLib;
+  quantidadeDev = quantidadeDev == "" ? 0 : quantidadeDev;
 
   salvamentosEmAndamento.add(material.id);
   estado.className = "estado-salvamento salvando";
@@ -524,7 +534,9 @@ async function atualizarQuantidadesItem(material, linha) {
     material.quantidade_dev = data.item.quantidade_dev;
     linha.querySelector(".input-devolvida").max = data.item.quantidade_lib;
     estado.className = "estado-salvamento salvo";
-    estado.textContent = "Salvo";
+    estado.textContent = data.saldo_estoque === null || data.saldo_estoque === undefined
+      ? "Salvo"
+      : `Salvo • estoque ${data.saldo_estoque}`;
   } catch (error) {
     estado.className = "estado-salvamento erro";
     estado.textContent = "Não salvo";
@@ -550,7 +562,7 @@ async function cancelarSolicitacao(id) {
 
     const solicitacao = todasSolicitacoes.find(item => Number(item.id) === Number(id));
     if (solicitacao) {
-      solicitacao.status = "cancelado";
+      solicitacao.status = data.status || "cancelado";
       solicitacao.cancelado_em = new Date().toISOString();
     }
     aplicarFiltros();

@@ -1,6 +1,13 @@
 const db = require("../models/db");
 
 async function listarSolicitacoes(regional) {
+  await db.execute(`
+    UPDATE materiais_solicitados
+    SET status = 'concluido'
+    WHERE regional = ? AND status = 'cancelado'
+      AND cancelado_em IS NOT NULL AND data_exe < CURRENT_DATE
+  `, [regional]);
+
   const [rows] = await db.execute(`
     SELECT
       ms.id, ms.usuario_id, ms.regional, ms.projeto, ms.cidade, ms.equipe,

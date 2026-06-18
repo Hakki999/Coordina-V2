@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard As-Built</title>
+  <link rel="stylesheet" href="/common/styles/global.css">
+  <link rel="stylesheet" href="/common/styles/messages.css">
+  <link rel="stylesheet" href="/pages/medicao/asbuilt-dashboard/style.css">
+</head>
+<body>
+  <div class="app-layout">
+    <aside class="sidebar" data-active="dashboardAsbuilt"></aside>
+    <main class="main-content dashboard-page">
+      <header class="page-head">
+        <div><span class="badge">Medicao</span><h1>Producao As-Built</h1><p id="resumoFiltro">Visao geral da regional.</p></div>
+        <button id="btnAtualizar" type="button">Atualizar</button>
+      </header>
+
+      <section class="filter-panel">
+        <div class="section-head">
+          <div><h2>Filtros dinamicos</h2><small>Combine colunas para atualizar todo o dashboard.</small></div>
+          <div><button id="btnAdicionarFiltro" type="button" class="btn-secondary">+ Filtro</button><button id="btnLimparFiltros" type="button" class="btn-secondary">Limpar</button><button id="btnAplicarFiltros" type="button">Aplicar</button></div>
+        </div>
+        <div id="filtrosDashboard" class="filter-rows"></div>
+      </section>
+
+      <section class="cards">
+        <article><span>Projetos</span><strong id="total">0</strong></article>
+        <article><span>Concluidos</span><strong id="concluidos">0</strong></article>
+        <article><span>Pendentes</span><strong id="pendentes">0</strong></article>
+        <article><span>Valor total</span><strong id="valor">R$ 0,00</strong></article>
+        <article><span>Valor este mes</span><strong id="valorMes">R$ 0,00</strong></article>
+      </section>
+
+      <section class="dash-grid">
+        <article class="panel individual-panel">
+          <div class="section-head">
+            <div><h2>Producao individual</h2><small>Detalhes e projetos recentes de uma pessoa.</small></div>
+            <label>Colaborador<select id="pessoaSelecionada"></select></label>
+          </div>
+          <div id="metricasIndividuais" class="individual-metrics"></div>
+          <div class="individual-content">
+            <div class="table-wrapper"><table><thead><tr><th>Projeto</th><th>Nome</th><th>Data As-Built</th><th>Status</th></tr></thead><tbody id="projetosIndividuais"></tbody></table></div>
+            <div><h3>Evolucao individual</h3><div id="evolucaoIndividual" class="evolution compact"></div></div>
+          </div>
+        </article>
+
+        <article class="panel wide">
+          <h2>Producao por colaborador</h2>
+          <div class="table-wrapper"><table><thead><tr><th>Colaborador</th><th>Projetos</th><th>Concluidos</th><th>Este mes</th><th>Valor</th><th>Taxa</th></tr></thead><tbody id="colaboradores"></tbody></table></div>
+        </article>
+        <article class="panel"><h2>Status SAP</h2><div id="statusSap" class="bars"></div></article>
+        <article class="panel"><h2>Status SGO</h2><div id="statusSgo" class="bars"></div></article>
+        <article class="panel wide"><h2>Evolucao de conclusoes</h2><div id="evolucao" class="evolution"></div></article>
+      </section>
+    </main>
+  </div>
+  <script src="/common/scripts/messages.js"></script>
+  <script src="/common/scripts/layout.js"></script>
+  <script src="/pages/medicao/asbuilt-dashboard/script.js"></script>
+</body>
+</html>

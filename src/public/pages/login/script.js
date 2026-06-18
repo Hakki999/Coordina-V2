@@ -59,7 +59,7 @@ formLogin.addEventListener("submit", async function (event) {
     msgSucesso("Login realizado com sucesso!");
 
     setTimeout(() => {
-      window.location.href = "/home";
+      window.location.href = data.redirect || "/home";
     }, 1000);
 
   } catch (error) {

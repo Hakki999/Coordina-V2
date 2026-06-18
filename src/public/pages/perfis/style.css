@@ -1,74 +1,73 @@
-.perfis-page {
-  min-height: 100vh;
-  padding: 24px;
+.admin-page { min-height: 100vh; padding: 24px; overflow: auto; }
+.admin-header { padding: 24px; display: flex; justify-content: space-between; gap: 22px; align-items: center; }
+.admin-header h1 { margin: 6px 0; font-size: 32px; }
+.page-badge, .profile-key, .count-badge, .system-badge {
+  display: inline-flex; width: fit-content; padding: 5px 10px; border-radius: 999px;
+  background: var(--primary-soft); color: var(--primary-dark); font-size: 11px; font-weight: 900;
 }
-
-.page-header {
-  padding: 24px;
-  margin-bottom: 20px;
+.admin-stats { display: grid; grid-template-columns: repeat(3, 110px); gap: 10px; }
+.admin-stats div { padding: 14px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface-soft); text-align: center; }
+.admin-stats strong, .admin-stats span { display: block; }
+.admin-stats strong { color: var(--primary-dark); font-size: 24px; }
+.admin-stats span { margin-top: 3px; color: var(--muted); font-size: 11px; text-transform: uppercase; }
+.admin-tabs { margin: 18px 0; padding: 8px; display: flex; gap: 8px; }
+.admin-tabs button { flex: 1; color: var(--text-soft); background: transparent; box-shadow: none; }
+.admin-tabs button.active { color: #fff; background: linear-gradient(135deg, var(--primary), #38bdf8); }
+.admin-panel { display: grid; gap: 18px; }
+.section-heading span { color: var(--primary-dark); font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
+.section-heading h2 { margin: 4px 0; font-size: 25px; }
+.section-heading p, .admin-form small { color: var(--muted); }
+.admin-split { display: grid; grid-template-columns: 330px minmax(0, 1fr); gap: 18px; align-items: start; }
+.admin-form, .data-card, .inline-form { padding: 20px; }
+.admin-form h3 { margin-bottom: 18px; }
+.admin-form button { width: 100%; }
+.admin-form small { display: block; margin-top: 6px; font-size: 11px; }
+.data-card-header { margin-bottom: 15px; display: flex; justify-content: space-between; gap: 12px; }
+.usuarios-table { min-width: 760px; }
+.usuarios-table td:first-child strong, .usuarios-table td:first-child small { display: block; }
+.usuarios-table td:first-child small { margin-top: 4px; color: var(--muted); }
+.usuarios-table select { min-width: 145px; padding: 9px; border-radius: var(--radius-sm); }
+.row-actions, .card-actions { display: flex; gap: 8px; align-items: center; }
+.row-actions button, .card-actions button { padding: 9px 11px; font-size: 12px; }
+.inline-form { display: grid; grid-template-columns: 230px 230px minmax(260px, 1fr) auto; gap: 14px; align-items: end; }
+.inline-form .form-group { margin: 0; }
+.inline-form button { height: 47px; white-space: nowrap; }
+.profiles-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.profile-card { padding: 20px; display: grid; gap: 14px; }
+.profile-head { display: flex; justify-content: space-between; gap: 12px; align-items: start; }
+.profile-head > div { flex: 1; }
+.profile-name { margin-top: 8px; font-size: 20px; font-weight: 800; }
+.profile-description { padding: 10px 12px; }
+.permissions-grid { display: grid; gap: 11px; }
+.permissions-grid fieldset { padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-md); }
+.permissions-grid legend { padding: 0 6px; color: var(--primary-dark); font-size: 11px; font-weight: 900; text-transform: uppercase; }
+.permission-item { margin: 0; padding: 9px; display: grid; grid-template-columns: 18px 1fr; gap: 9px; border-radius: var(--radius-sm); cursor: pointer; }
+.permission-item:hover { background: var(--hover-bg); }
+.permission-item input { width: 17px; height: 17px; padding: 0; }
+.permission-item strong, .permission-item small { display: block; }
+.permission-item strong { font-size: 13px; }
+.permission-item small { margin-top: 3px; color: var(--muted); font-size: 11px; font-weight: 400; }
+.card-actions { justify-content: space-between; }
+.system-badge { color: var(--muted); background: var(--surface-muted); }
+.regionais-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.regional-card { padding: 20px; display: grid; gap: 16px; }
+.regional-card h3 { margin-top: 5px; }
+.regional-card > div:first-child span { color: var(--primary-dark); font-size: 12px; font-weight: 900; }
+.regional-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; }
+.regional-metrics span { padding: 9px; border-radius: var(--radius-sm); background: var(--surface-soft); color: var(--muted); font-size: 10px; text-align: center; }
+.regional-metrics strong { display: block; color: var(--text); font-size: 16px; }
+.btn-danger:disabled { opacity: .55; cursor: not-allowed; }
+@media (max-width: 1200px) {
+  .profiles-grid, .regionais-grid { grid-template-columns: 1fr; }
+  .inline-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .inline-form button { width: 100%; }
 }
-
-.page-header h1 {
-  margin: 6px 0;
+@media (max-width: 900px) {
+  .admin-header, .admin-split { grid-template-columns: 1fr; flex-direction: column; align-items: stretch; }
+  .admin-stats { grid-template-columns: repeat(3, 1fr); }
 }
-
-.page-badge,
-.badge {
-  display: inline-flex;
-  padding: 5px 10px;
-  border-radius: 999px;
-  background: var(--primary-soft);
-  color: var(--primary-dark);
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.perfis-grid {
-  display: grid;
-  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
-  gap: 20px;
-}
-
-.perfil-form,
-.usuarios-card {
-  padding: 22px;
-}
-
-.perfil-form h2,
-.usuarios-header {
-  margin-bottom: 20px;
-}
-
-.perfil-form small {
-  display: block;
-  margin-top: 7px;
-  color: var(--muted);
-}
-
-.perfil-form button {
-  width: 100%;
-}
-
-.usuarios-header {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-@media (max-width: 1000px) {
-  .perfis-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 600px) {
-  .perfis-page {
-    padding: 14px;
-  }
-
-  .perfil-form,
-  .usuarios-card,
-  .page-header {
-    padding: 16px;
-  }
+@media (max-width: 650px) {
+  .admin-page { padding: 14px; }
+  .admin-tabs, .inline-form { grid-template-columns: 1fr; flex-direction: column; }
+  .admin-stats { grid-template-columns: 1fr; }
 }

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Projetos sem As-Built</title>
+  <link rel="stylesheet" href="/common/styles/global.css"><link rel="stylesheet" href="/common/styles/messages.css">
+  <link rel="stylesheet" href="/pages/medicao/asbuilt-pendentes/style.css">
+</head>
+<body>
+  <div class="app-layout"><aside class="sidebar" data-active="asbuiltPendentes"></aside>
+    <main class="main-content pendentes-page">
+      <header class="page-head card"><div><span class="badge">Medição</span><h1>Projetos concluídos sem As-Built</h1><p>Acompanhe o tempo desde a conclusão e os projetos que precisam de retorno a campo.</p></div><button id="btnNovo">+ Adicionar projeto</button></header>
+      <section class="card table-card"><div class="table-top"><input id="busca" type="search" placeholder="Filtrar projeto, cidade ou localização"><strong id="contador">0 projeto(s)</strong></div>
+        <div class="table-wrapper"><table><thead><tr><th>Projeto</th><th>Conclusão</th><th>Tempo finalizado</th><th>Cidade</th><th>Localização</th><th>Ir a campo?</th><th>Observação</th><th>PDF</th><th>Adicionado por</th><th>Ações</th></tr></thead><tbody id="tabela"></tbody></table></div>
+      </section>
+    </main>
+  </div>
+  <div id="modal" class="modal-backdrop" hidden><form id="formProjeto" class="modal-card"><div><span class="badge">Nova pendência</span><h2>Adicionar projeto concluído</h2></div>
+    <div class="form-grid"><label>Projeto<input id="projeto" required maxlength="100"></label><label>Data conclusão<input id="dataConclusao" type="date" required></label><label>Cidade<input id="cidade" maxlength="150"></label><label>Localização<input id="localizacao" maxlength="255"></label></div>
+    <label class="check"><input id="precisaCampo" type="checkbox"> Precisa ir em campo?</label><label>Observação<textarea id="observacao" maxlength="4000"></textarea></label>
+    <label id="pdfLabel">PDF do projeto<input id="pdf" type="file" accept="application/pdf"><small>Obrigatório quando o projeto precisa de ida a campo.</small></label>
+    <div class="modal-actions"><button id="btnCancelar" type="button" class="btn-secondary">Cancelar</button><button type="submit">Adicionar</button></div>
+  </form></div>
+  <script src="/common/scripts/messages.js"></script><script src="/common/scripts/layout.js"></script><script src="/pages/medicao/asbuilt-pendentes/script.js"></script>
+</body></html>

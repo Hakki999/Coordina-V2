@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Controle de Equipes - Asbuilt</title>
+
+  <!-- Biblioteca para importar/exportar Excel -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+  <style>
+    :root {
+      --azul: #002b6c;
+      --azul-2: #063d91;
+      --amarelo: #ffc000;
+      --vermelho: #d80000;
+      --bg: #f3f5f9;
+      --card: #ffffff;
+      --texto: #1f2937;
+      --muted: #6b7280;
+      --borda: #d9dee8;
+      --verde: #16a34a;
+      --laranja: #f97316;
+      --sombra: 0 10px 30px rgba(15, 23, 42, .08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--texto);
+      min-height: 100vh;
+    }
+
+    header {
+      background: linear-gradient(135deg, var(--azul), var(--azul-2));
+      color: white;
+      padding: 22px 28px;
+      box-shadow: var(--sombra);
+    }
+
+    header h1 {
+      font-size: 24px;
+      margin-bottom: 6px;
+    }
+
+    header p {
+      opacity: .85;
+      font-size: 14px;
+    }
+
+    main {
+      padding: 22px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(180px, 1fr));
+      gap: 14px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--borda);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: var(--sombra);
+    }
+
+    .card small {
+      color: var(--muted);
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .card strong {
+      font-size: 26px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 390px 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .box {
+      background: white;
+      border: 1px solid var(--borda);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: var(--sombra);
+    }
+
+    .box h2 {
+      font-size: 18px;
+      margin-bottom: 14px;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #374151;
+      display: grid;
+      gap: 5px;
+    }
+
+    input, select, textarea {
+      border: 1px solid var(--borda);
+      border-radius: 10px;
+      padding: 10px 11px;
+      outline: none;
+      background: white;
+      font-size: 14px;
+    }
+
+    textarea {
+      min-height: 70px;
+      resize: vertical;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--azul-2);
+      box-shadow: 0 0 0 3px rgba(6, 61, 145, .12);
+    }
+
+    .linha-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .botoes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 10px 13px;
+      cursor: pointer;
+      font-weight: 700;
+      background: var(--azul);
+      color: white;
+      transition: .15s;
+    }
+
+    button:hover {
+      filter: brightness(1.08);
+      transform: translateY(-1px);
+    }
+
+    button.secundario {
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    button.perigo {
+      background: var(--vermelho);
+    }
+
+    button.sucesso {
+      background: var(--verde);
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1.4fr 180px 180px 180px auto auto;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      max-height: 62vh;
+      border: 1px solid var(--borda);
+      border-radius: 14px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      min-width: 1250px;
+      font-size: 13px;
+    }
+
+    thead th {
+      color: white;
+      padding: 10px;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      border-right: 1px solid rgba(255,255,255,.25);
+      white-space: nowrap;
+    }
+
+    thead tr:first-child th {
+      text-align: center;
+      font-size: 13px;
+      letter-spacing: .4px;
+    }
+
+    thead tr:nth-child(2) th {
+      top: 36px;
+      font-size: 12px;
+    }
+
+    .h-asb { background: var(--azul); }
+    .h-mat { background: var(--amarelo); color: #111827; }
+    .h-status { background: var(--vermelho); }
+
+    tbody td {
+      padding: 9px 10px;
+      border-bottom: 1px solid #edf0f5;
+      border-right: 1px solid #edf0f5;
+      vertical-align: top;
+      background: white;
+    }
+
+    tbody tr:hover td {
+      background: #f8fbff;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 4px 9px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .tag.ok { background: #dcfce7; color: #166534; }
+    .tag.pendente { background: #fef3c7; color: #92400e; }
+    .tag.erro { background: #fee2e2; color: #991b1b; }
+    .tag.info { background: #dbeafe; color: #1e40af; }
+
+    .acoes {
+      display: flex;
+      gap: 6px;
+    }
+
+    .acoes button {
+      padding: 7px 9px;
+      font-size: 12px;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+      margin-top: 10px;
+    }
+
+    .vazio {
+      text-align: center;
+      padding: 34px;
+      color: var(--muted);
+    }
+
+    @media (max-width: 1100px) {
+      .layout, .cards {
+        grid-template-columns: 1fr;
+      }
+
+      .toolbar {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Controle de Equipes - ASBUILT / MATERIAL / STATUS</h1>
+    <p>Sistema inicial local, com importação/exportação Excel e preparado para backend futuramente.</p>
+  </header>
+
+  <main>
+    <section class="cards">
+      <div class="card">
+        <small>Total de registros</small>
+        <strong id="kpiTotal">0</strong>
+      </div>
+      <div class="card">
+        <small>Concluídos</small>
+        <strong id="kpiConcluido">0</strong>
+      </div>
+      <div class="card">
+        <small>Pendentes</small>
+        <strong id="kpiPendente">0</strong>
+      </div>
+      <div class="card">
+        <small>Valor total</small>
+        <strong id="kpiValor">R$ 0,00</strong>
+      </div>
+    </section>
+
+    <section class="layout">
+      <aside class="box">
+        <h2 id="tituloForm">Novo registro</h2>
+
+        <form id="formRegistro" class="form-grid">
+          <input type="hidden" id="id" />
+
+          <label>
+            Asbuilteiro
+            <input id="asbuilteiro" list="listaAsbuilteiros" placeholder="Ex: José, Lucas, Ana" required />
+            <datalist id="listaAsbuilteiros"></datalist>
+          </label>
+
+          <div class="linha-2">
+            <label>
+              Data ASB
+              <input id="data_asb" type="date" />
+            </label>
+
+            <label>
+              Tipo
+              <select id="tipo">
+                <option value="">Selecione</option>
+                <option>V1</option>
+                <option>V2</option>
+                <option>IOP</option>
+                <option>COMS</option>
+                <option>Outros</option>
+              </select>
+            </label>
+          </div>
+
+          <label>
+            Observação ASB
+            <textarea id="obs_asb" placeholder="Pendência, restrição, observação do asbuilt..."></textarea>
+          </label>
+
+          <div class="linha-2">
+            <label>
+              Valor
+              <input id="valor" type="number" step="0.01" min="0" placeholder="0,00" />
+            </label>
+
+            <label>
+              Material
+              <select id="material">
+                <option value="Pendente">Pendente</option>
+                <option value="Separado">Separado</option>
+                <option value="Baixado">Baixado</option>
+                <option value="Divergente">Divergente</option>
+                <option value="Não se aplica">Não se aplica</option>
+              </select>
+            </label>
+          </div>
+
+          <label>
+            Data Material
+            <input id="data_mat" type="date" />
+          </label>
+
+          <label>
+            Observação Material
+            <textarea id="obs_mat" placeholder="Material faltante, divergência, baixa, almoxarifado..."></textarea>
+          </label>
+
+          <div class="linha-2">
+            <label>
+              SGO
+              <select id="sgo">
+                <option value="Pendente">Pendente</option>
+                <option value="Avançado">Avançado</option>
+                <option value="Erro">Erro</option>
+                <option value="Não se aplica">Não se aplica</option>
+              </select>
+            </label>
+
+            <label>
+              SAP
+              <select id="sap">
+                <option value="Pendente">Pendente</option>
+                <option value="Avançado">Avançado</option>
+                <option value="Erro">Erro</option>
+                <option value="Não se aplica">Não se aplica</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="botoes">
+            <button type="submit" class="sucesso">Salvar</button>
+            <button type="button" class="secundario" onclick="limparFormulario()">Limpar</button>
+            <button type="button" class="perigo" onclick="apagarTudo()">Apagar tudo</button>
+          </div>
+
+          <p class="hint">
+            Os dados ficam salvos no navegador por enquanto. Depois dá para trocar o localStorage por uma API Node/Express + Supabase/PostgreSQL.
+          </p>
+        </form>
+      </aside>
+
+      <section class="box">
+        <h2>Registros</h2>
+
+        <div class="toolbar">
+          <input id="busca" placeholder="Buscar por asbuilteiro, observação, tipo..." oninput="renderizarTabela()" />
+
+          <select id="filtroAsbuilteiro" onchange="renderizarTabela()">
+            <option value="">Todos asbuilteiros</option>
+          </select>
+
+          <select id="filtroMaterial" onchange="renderizarTabela()">
+            <option value="">Todos materiais</option>
+            <option>Pendente</option>
+            <option>Separado</option>
+            <option>Baixado</option>
+            <option>Divergente</option>
+            <option>Não se aplica</option>
+          </select>
+
+          <select id="filtroStatus" onchange="renderizarTabela()">
+            <option value="">Todos status</option>
+            <option value="concluido">Concluído</option>
+            <option value="pendente">Pendente</option>
+            <option value="erro">Erro</option>
+          </select>
+
+          <button onclick="exportarExcel()">Exportar Excel</button>
+
+          <label style="display:flex; align-items:center; justify-content:center; background:#e5e7eb; border-radius:10px; padding:10px 13px; cursor:pointer;">
+            Importar Excel
+            <input type="file" id="importExcel" accept=".xlsx,.xls,.csv" hidden onchange="importarExcel(event)" />
+          </label>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th class="h-asb" colspan="5">ASBUILT</th>
+                <th class="h-mat" colspan="3">MATERIAL</th>
+                <th class="h-status" colspan="2">STATUS</th>
+                <th class="h-asb" rowspan="2">AÇÕES</th>
+              </tr>
+              <tr>
+                <th class="h-asb">ASBUILTEIRO</th>
+                <th class="h-asb">DATA_ASB</th>
+                <th class="h-asb">TIPO</th>
+                <th class="h-asb">OBS_ASB</th>
+                <th class="h-asb">VALOR</th>
+                <th class="h-mat">MATERIAL</th>
+                <th class="h-mat">DATA_MAT</th>
+                <th class="h-mat">OBS_MAT</th>
+                <th class="h-status">SGO</th>
+                <th class="h-status">SAP</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    const STORAGE_KEY = 'controle_equipes_asbuilt_v1';
+
+    let registros = carregarDados();
+
+    const campos = [
+      'id', 'asbuilteiro', 'data_asb', 'tipo', 'obs_asb', 'valor',
+      'material', 'data_mat', 'obs_mat', 'sgo', 'sap'
+    ];
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('data_asb').valueAsDate = new Date();
+      renderizarTabela();
+    });
+
+    document.getElementById('formRegistro').addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const registro = lerFormulario();
+
+      if (!registro.asbuilteiro.trim()) {
+        alert('Informe o asbuilteiro.');
+        return;
+      }
+
+      if (registro.id) {
+        registros = registros.map(item => item.id === registro.id ? registro : item);
+      } else {
+        registro.id = crypto.randomUUID();
+        registro.criado_em = new Date().toISOString();
+        registros.push(registro);
+      }
+
+      salvarDados();
+      limparFormulario();
+      renderizarTabela();
+    });
+
+    function lerFormulario() {
+      const obj = {};
+      campos.forEach(campo => obj[campo] = document.getElementById(campo).value);
+      obj.valor = Number(obj.valor || 0);
+      return obj;
+    }
+
+    function preencherFormulario(id) {
+      const registro = registros.find(item => item.id === id);
+      if (!registro) return;
+
+      campos.forEach(campo => {
+        document.getElementById(campo).value = registro[campo] ?? '';
+      });
+
+      document.getElementById('tituloForm').textContent = 'Editando registro';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function limparFormulario() {
+      document.getElementById('formRegistro').reset();
+      document.getElementById('id').value = '';
+      document.getElementById('data_asb').valueAsDate = new Date();
+      document.getElementById('material').value = 'Pendente';
+      document.getElementById('sgo').value = 'Pendente';
+      document.getElementById('sap').value = 'Pendente';
+      document.getElementById('tituloForm').textContent = 'Novo registro';
+    }
+
+    function excluirRegistro(id) {
+      if (!confirm('Deseja excluir este registro?')) return;
+      registros = registros.filter(item => item.id !== id);
+      salvarDados();
+      renderizarTabela();
+    }
+
+    function apagarTudo() {
+      if (!confirm('Deseja apagar todos os registros salvos neste navegador?')) return;
+      registros = [];
+      salvarDados();
+      renderizarTabela();
+      limparFormulario();
+    }
+
+    function carregarDados() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+      } catch {
+        return [];
+      }
+    }
+
+    function salvarDados() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(registros));
+    }
+
+    function renderizarTabela() {
+      const tbody = document.getElementById('tbody');
+      const dados = filtrarRegistros();
+
+      atualizarFiltros();
+      atualizarKpis();
+
+      if (!dados.length) {
+        tbody.innerHTML = `<tr><td colspan="11" class="vazio">Nenhum registro encontrado.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = dados.map(item => `
+        <tr>
+          <td>${escapeHtml(item.asbuilteiro)}</td>
+          <td>${formatarData(item.data_asb)}</td>
+          <td>${escapeHtml(item.tipo)}</td>
+          <td>${escapeHtml(item.obs_asb)}</td>
+          <td>${formatarMoeda(item.valor)}</td>
+          <td>${tagMaterial(item.material)}</td>
+          <td>${formatarData(item.data_mat)}</td>
+          <td>${escapeHtml(item.obs_mat)}</td>
+          <td>${tagStatus(item.sgo)}</td>
+          <td>${tagStatus(item.sap)}</td>
+          <td>
+            <div class="acoes">
+              <button onclick="preencherFormulario('${item.id}')">Editar</button>
+              <button class="perigo" onclick="excluirRegistro('${item.id}')">Excluir</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function filtrarRegistros() {
+      const busca = document.getElementById('busca').value.toLowerCase().trim();
+      const asbuilteiro = document.getElementById('filtroAsbuilteiro').value;
+      const material = document.getElementById('filtroMaterial').value;
+      const status = document.getElementById('filtroStatus').value;
+
+      return registros.filter(item => {
+        const texto = Object.values(item).join(' ').toLowerCase();
+        const bateBusca = !busca || texto.includes(busca);
+        const bateAsb = !asbuilteiro || item.asbuilteiro === asbuilteiro;
+        const bateMat = !material || item.material === material;
+        const bateStatus = !status || classificarGeral(item) === status;
+        return bateBusca && bateAsb && bateMat && bateStatus;
+      });
+    }
+
+    function atualizarFiltros() {
+      const select = document.getElementById('filtroAsbuilteiro');
+      const valorAtual = select.value;
+      const nomes = [...new Set(registros.map(r => r.asbuilteiro).filter(Boolean))].sort();
+
+      select.innerHTML = '<option value="">Todos asbuilteiros</option>' +
+        nomes.map(nome => `<option ${nome === valorAtual ? 'selected' : ''}>${escapeHtml(nome)}</option>`).join('');
+
+      document.getElementById('listaAsbuilteiros').innerHTML =
+        nomes.map(nome => `<option value="${escapeHtml(nome)}"></option>`).join('');
+    }
+
+    function atualizarKpis() {
+      const total = registros.length;
+      const concluidos = registros.filter(r => classificarGeral(r) === 'concluido').length;
+      const erros = registros.filter(r => classificarGeral(r) === 'erro').length;
+      const pendentes = total - concluidos;
+      const valor = registros.reduce((soma, item) => soma + Number(item.valor || 0), 0);
+
+      document.getElementById('kpiTotal').textContent = total;
+      document.getElementById('kpiConcluido').textContent = concluidos;
+      document.getElementById('kpiPendente').textContent = pendentes + (erros ? ` (${erros} erro)` : '');
+      document.getElementById('kpiValor').textContent = formatarMoeda(valor);
+    }
+
+    function classificarGeral(item) {
+      const camposErro = [item.material, item.sgo, item.sap].some(v => ['Erro', 'Divergente'].includes(v));
+      if (camposErro) return 'erro';
+
+      const materialOk = ['Baixado', 'Não se aplica'].includes(item.material);
+      const sgoOk = ['Avançado', 'Não se aplica'].includes(item.sgo);
+      const sapOk = ['Avançado', 'Não se aplica'].includes(item.sap);
+
+      return materialOk && sgoOk && sapOk ? 'concluido' : 'pendente';
+    }
+
+    function tagMaterial(valor) {
+      const mapa = {
+        'Baixado': 'ok',
+        'Separado': 'info',
+        'Pendente': 'pendente',
+        'Divergente': 'erro',
+        'Não se aplica': 'info'
+      };
+      return `<span class="tag ${mapa[valor] || 'pendente'}">${escapeHtml(valor || 'Pendente')}</span>`;
+    }
+
+    function tagStatus(valor) {
+      const mapa = {
+        'Avançado': 'ok',
+        'Pendente': 'pendente',
+        'Erro': 'erro',
+        'Não se aplica': 'info'
+      };
+      return `<span class="tag ${mapa[valor] || 'pendente'}">${escapeHtml(valor || 'Pendente')}</span>`;
+    }
+
+    function formatarData(data) {
+      if (!data) return '';
+      const [ano, mes, dia] = data.split('-');
+      if (!ano || !mes || !dia) return data;
+      return `${dia}/${mes}/${ano}`;
+    }
+
+    function formatarMoeda(valor) {
+      return Number(valor || 0).toLocaleString('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      });
+    }
+
+    function escapeHtml(valor) {
+      return String(valor ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    function exportarExcel() {
+      const dados = registros.map(item => ({
+        ASBUILTEIRO: item.asbuilteiro,
+        DATA_ASB: item.data_asb,
+        TIPO: item.tipo,
+        OBS_ASB: item.obs_asb,
+        VALOR: item.valor,
+        MATERIAL: item.material,
+        DATA_MAT: item.data_mat,
+        OBS_MAT: item.obs_mat,
+        SGO: item.sgo,
+        SAP: item.sap
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(dados);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Controle');
+      XLSX.writeFile(wb, `controle_asbuilt_${new Date().toISOString().slice(0,10)}.xlsx`);
+    }
+
+    function importarExcel(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+
+      reader.onload = (e) => {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const linhas = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+
+        const importados = linhas.map(linha => ({
+          id: crypto.randomUUID(),
+          asbuilteiro: linha.ASBUILTEIRO || linha.Asbuilteiro || linha.asbuilteiro || '',
+          data_asb: normalizarData(linha.DATA_ASB || linha.data_asb || ''),
+          tipo: linha.TIPO || linha.Tipo || linha.tipo || '',
+          obs_asb: linha.OBS_ASB || linha.obs_asb || '',
+          valor: Number(linha.VALOR || linha.Valor || linha.valor || 0),
+          material: linha.MATERIAL || linha.Material || linha.material || 'Pendente',
+          data_mat: normalizarData(linha.DATA_MAT || linha.data_mat || ''),
+          obs_mat: linha.OBS_MAT || linha.obs_mat || '',
+          sgo: linha.SGO || linha.sgo || 'Pendente',
+          sap: linha.SAP || linha.sap || 'Pendente',
+          criado_em: new Date().toISOString()
+        }));
+
+        registros = [...registros, ...importados];
+        salvarDados();
+        renderizarTabela();
+        event.target.value = '';
+        alert(`${importados.length} registro(s) importado(s).`);
+      };
+
+      reader.readAsArrayBuffer(file);
+    }
+
+    function normalizarData(valor) {
+      if (!valor) return '';
+
+      if (typeof valor === 'number') {
+        const data = XLSX.SSF.parse_date_code(valor);
+        if (!data) return '';
+        return `${data.y}-${String(data.m).padStart(2, '0')}-${String(data.d).padStart(2, '0')}`;
+      }
+
+      const texto = String(valor).trim();
+      if (/^\d{4}-\d{2}-\d{2}$/.test(texto)) return texto;
+
+      const partes = texto.split('/');
+      if (partes.length === 3) {
+        const [dia, mes, ano] = partes;
+        return `${ano.padStart(4, '20')}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
+      }
+
+      return '';
+    }
+  </script>
+</body>
+</html>

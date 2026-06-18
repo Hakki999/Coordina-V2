@@ -2,6 +2,25 @@ const jwt = require("jsonwebtoken");
 const db = require("../models/db");
 const { hashPassword, verifyPassword, isStrongPassword, sanitizeText } = require("../utils/security");
 
+const DESTINOS = [
+  ["home.visualizar", "/home"],
+  ["logistica.solicitar", "/solicitar-materiais"],
+  ["logistica.solicitacoes.visualizar", "/solicitacoes"],
+  ["logistica.configuracoes", "/configuracoes"],
+  ["almoxarifado.estoque", "/estoque-fisico"],
+  ["almoxarifado.dashboard", "/dashboard-almoxarifado"],
+  ["medicao.controle_asbuilt.visualizar", "/controle-asbuilt"],
+  ["medicao.controle_asbuilt.editar", "/controle-asbuilt"],
+  ["medicao.asbuilt_pendentes", "/asbuilt-pendentes"],
+  ["medicao.asbuilt_dashboard", "/dashboard-asbuilt"],
+  ["medicao.sgo", "/get-sgo"],
+  ["medicao.asbuilt", "/teste"],
+  ["bi.gpm.visualizar", "/bi-gpm/execucao"],
+  ["admin.usuarios", "/perfis"],
+  ["admin.perfis", "/perfis"],
+  ["admin.regionais", "/perfis"]
+];
+
 async function login(req, res) {
   try {
     const nome = sanitizeText(req.body.nome, 100);
@@ -48,13 +67,25 @@ async function login(req, res) {
       maxAge: 8 * 60 * 60 * 1000
     });
 
+    const [permissoes] = await db.execute(`
+      SELECT pe.chave
+      FROM perfil_permissoes pp
+      INNER JOIN perfis_acesso p ON p.id = pp.perfil_id
+      INNER JOIN permissoes pe ON pe.id = pp.permissao_id
+      WHERE p.chave = ?
+    `, [usuario.tipo_usuario]);
+    const chaves = permissoes.map(item => item.chave);
+    const destino = DESTINOS.find(([permissao]) => chaves.includes(permissao))?.[1] || "/";
+
     return res.json({
       message: "Login realizado com sucesso.",
+      redirect: destino,
       usuario: {
         id: usuario.id,
         nome: usuario.nome,
         tipo_usuario: usuario.tipo_usuario,
-        regional: usuario.regional
+        regional: usuario.regional,
+        permissoes: chaves
       }
     });
   } catch (error) {

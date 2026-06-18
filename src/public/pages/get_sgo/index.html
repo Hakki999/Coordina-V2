@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/controle/get_sgo/css/sgo.css">
+    <link rel="shortcut icon" href="/controle/get_sgo/src/logoIcon.png" type="image/x-icon">
+    <title>Atualização SGO | Coordina</title>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="brand">
+            <img src="/controle/get_sgo/src/logoIcon.png" alt="">
+            <div><strong>Coordina</strong><span>Controle operacional</span></div>
+        </div>
+        <nav>
+            <a href="/home">Início</a>
+            <a href="/controle/iop/lista_iop">Projetos IOP</a>
+            <a href="/controle/obras/obras">AsBuilt</a>
+            <a href="/controle/dashboard-asbuilt">Dashboard AsBuilt</a>
+            <a href="/controle/erros-asbuilt">Teste de erros</a>
+            <a class="active" href="/controle/get_sgo">Atualização SGO</a>
+        </nav>
+    </aside>
+
+    <main>
+        <header class="page-header">
+            <div>
+                <span class="eyebrow">Integração segura</span>
+                <h1>Atualização SGO</h1>
+                <p>Consulte o SGO, atualize projetos e acompanhe cada execução sem expor credenciais no navegador.</p>
+            </div>
+            <button class="button primary" id="manualSync">Atualizar projetos agora</button>
+        </header>
+
+        <section class="cards" aria-label="Resumo da atualização">
+            <article class="card"><span>Status atual</span><strong id="currentStatus">Carregando...</strong></article>
+            <article class="card"><span>Última conclusão</span><strong id="lastFinished">-</strong></article>
+            <article class="card"><span>Projetos atualizados</span><strong id="updatedCount">0</strong></article>
+            <article class="card"><span>Próxima execução</span><strong id="nextRun">-</strong></article>
+        </section>
+
+        <section class="grid">
+            <article class="panel">
+                <div class="panel-title">
+                    <div><span class="eyebrow">Consulta</span><h2>Consulta individual ou em lote</h2></div>
+                </div>
+                <label for="queryType">Tipo de consulta</label>
+                <select id="queryType">
+                    <option value="Notas">Dados por nota</option>
+                    <option value="NomeObra">Dados por nome da obra</option>
+                    <option value="NPEP">Número PEP</option>
+                    <option value="FluxoNota">Fluxo do projeto</option>
+                    <option value="OrcamentoNota">Orçamento do projeto</option>
+                    <option value="ObterFluxoArquivos">Fluxo de arquivos</option>
+                    <option value="assinaturas">Assinaturas</option>
+                    <option value="ObterNotaPorPEP">Nota por PEP</option>
+                </select>
+                <label for="queryIds">Notas ou identificadores, um por linha</label>
+                <textarea id="queryIds" placeholder="Ex.:&#10;4000123456&#10;4000123457"></textarea>
+                <button class="button primary" id="runQuery">Executar consulta</button>
+            </article>
+
+            <article class="panel">
+                <div class="panel-title">
+                    <div><span class="eyebrow">Automação</span><h2>Agenda de atualização</h2></div>
+                </div>
+                <label class="toggle"><input type="checkbox" id="scheduleEnabled"><span>Atualização automática ativa</span></label>
+                <label for="scheduleTimes">Horários, separados por vírgula</label>
+                <input id="scheduleTimes" placeholder="08:00, 12:00, 16:00, 20:00">
+                <p class="hint">A agenda usa o horário local do servidor. Execuções simultâneas são bloqueadas.</p>
+                <button class="button secondary" id="saveSchedule">Salvar configuração</button>
+            </article>
+        </section>
+
+        <section class="panel">
+            <div class="panel-title">
+                <div><span class="eyebrow">Resultado</span><h2>Resultado da consulta</h2></div>
+                <button class="button ghost" id="downloadResults">Exportar JSON</button>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>ID</th><th>Endpoint</th><th>Status</th><th>Resumo</th><th>Horário</th></tr></thead>
+                    <tbody id="queryResults"><tr><td colspan="5" class="empty">Nenhuma consulta executada.</td></tr></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-title">
+                <div><span class="eyebrow">Auditoria</span><h2>Logs da última atualização</h2></div>
+                <button class="button ghost" id="refreshStatus">Atualizar</button>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Horário</th><th>Nível</th><th>Projeto</th><th>Mensagem</th></tr></thead>
+                    <tbody id="syncLogs"><tr><td colspan="4" class="empty">Sem logs disponíveis.</td></tr></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <div id="toast" role="status" aria-live="polite"></div>
+    <script src="/controle/get_sgo/js/main.js"></script>
+</body>
+</html>

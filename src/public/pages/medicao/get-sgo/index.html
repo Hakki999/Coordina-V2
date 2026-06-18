@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Consulta SGO | Coordina</title>
+  <link rel="shortcut icon" href="/common/assets/logoIcon.png" type="image/x-icon">
+  <link rel="stylesheet" href="/common/styles/global.css">
+  <link rel="stylesheet" href="/common/styles/messages.css">
+  <link rel="stylesheet" href="/pages/medicao/get-sgo/style.css">
+</head>
+<body>
+  <div class="app-layout">
+    <aside class="sidebar" data-active="getSgo"></aside>
+    <main class="main-content sgo-page">
+      <header class="page-head card">
+        <div><span class="page-badge">VPN Equatorial</span><h1>Consulta SGO</h1><p>A requisição sai diretamente deste navegador e usa a conexão VPN ativa.</p></div>
+        <span id="vpnStatus" class="status-pill">Verificando integração</span>
+      </header>
+      <section class="sgo-grid">
+        <form id="formConsulta" class="card panel">
+          <h2>Consultar projetos</h2>
+          <p class="hint endpoint-hint">O endereço e o corpo da requisição são escolhidos automaticamente conforme o tipo selecionado.</p>
+          <label>Tipo de consulta
+            <select id="queryType">
+              <option value="FluxoNota">Status / fluxo do projeto</option>
+              <option value="Notas">Dados por nota</option>
+              <option value="NomeObra">Dados por nome da obra</option>
+              <option value="NPEP">Status da nota SAP</option>
+              <option value="OrcamentoNota">Orçamento do projeto</option>
+              <option value="ObterFluxoArquivos">Fluxo de arquivos</option>
+              <option value="assinaturas">Assinaturas</option>
+              <option value="ObterNotaPorPEP">Nota por PEP</option>
+            </select>
+          </label>
+          <label>Projetos / notas, um por linha<textarea id="queryIds" required placeholder="420000000&#10;420000001"></textarea></label>
+          <button type="submit">Executar consulta pela VPN</button>
+        </form>
+        <section class="card panel results-panel">
+          <div class="panel-title">
+            <div><h2>Resultados em tabela</h2><p id="resultadoResumo">Nenhuma consulta executada.</p></div>
+            <div class="result-actions">
+              <button id="btnCopiarTabela" class="btn-secondary" type="button">Copiar tabela</button>
+              <button id="btnExportarCsv" class="btn-secondary" type="button">Exportar CSV</button>
+              <button id="btnExportarJson" class="btn-secondary" type="button">JSON</button>
+            </div>
+          </div>
+          <div class="table-wrapper"><table id="tabelaResultados"><thead></thead><tbody><tr><td class="empty-row">Aguardando consulta.</td></tr></tbody></table></div>
+        </section>
+      </section>
+    </main>
+  </div>
+  <script src="/common/scripts/messages.js"></script>
+  <script src="/common/scripts/layout.js"></script>
+  <script src="/pages/medicao/get-sgo/sgo-client.js"></script>
+  <script src="/pages/medicao/get-sgo/script.js"></script>
+</body>
+</html>

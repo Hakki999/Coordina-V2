@@ -103,7 +103,7 @@ function imprimirListaMateriais(solicitacao) {
           <div class="assinatura"><strong>Responsável pela separação</strong>Nome / assinatura / data</div>
           <div class="assinatura"><strong>Responsável pelo recebimento</strong>Nome / assinatura / data</div>
         </div>
-        <div class="final"><span>Controle de Materiais • Solicitação #${e(solicitacao.id)}</span><span>Documento gerado automaticamente</span></div>
+        <div class="final"><span>Coordina • Solicitação #${e(solicitacao.id)}</span><span>Documento gerado automaticamente</span></div>
       </footer>
     </main>
   </body>

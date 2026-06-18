@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Perfis | Controle de Materiais</title>
+  <title>Controle de acesso | Coordina</title>
   <link rel="shortcut icon" href="/common/assets/logoIcon.png" type="image/x-icon">
   <link rel="stylesheet" href="/common/styles/global.css" />
   <link rel="stylesheet" href="/common/styles/messages.css" />
@@ -12,58 +12,78 @@
 <body>
   <div class="app-layout">
     <aside class="sidebar" data-active="perfis"></aside>
-    <main class="main-content perfis-page">
-      <header class="page-header card">
+    <main class="main-content admin-page">
+      <header class="admin-header card">
         <div>
           <span class="page-badge">Administração</span>
-          <h1>Perfis de acesso</h1>
-          <p>Cadastre usuários e defina o acesso e a regional de cada pessoa.</p>
+          <h1>Controle de acesso</h1>
+          <p>Gerencie usuários, perfis, permissões e regionais em um único lugar.</p>
+        </div>
+        <div class="admin-stats">
+          <div><strong id="totalUsuarios">0</strong><span>Usuários</span></div>
+          <div><strong id="totalPerfis">0</strong><span>Perfis</span></div>
+          <div><strong id="totalRegionais">0</strong><span>Regionais</span></div>
         </div>
       </header>
 
-      <section class="perfis-grid">
-        <form id="formPerfil" class="card perfil-form">
-          <h2>Novo perfil</h2>
-          <div class="form-group">
-            <label for="nome">Nome do usuário</label>
-            <input id="nome" maxlength="100" autocomplete="off" required />
-          </div>
-          <div class="form-group">
-            <label for="senha">Senha temporária</label>
-            <input id="senha" type="password" minlength="10" maxlength="128" autocomplete="new-password" required />
-            <small>Use maiúscula, minúscula, número e símbolo.</small>
-          </div>
-          <div class="form-group">
-            <label for="tipoUsuario">Perfil</label>
-            <select id="tipoUsuario" required>
-              <option value="programacao">Programação</option>
-              <option value="almoxarifado">Almoxarifado</option>
-              <option value="admin">Administrador</option>
-              <option value="sem_perfil">Sem perfil</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="regional">Regional</label>
-            <select id="regional" required>
-              <option value="MBL">MBL - Montes Belos</option>
-              <option value="MHS">MHS - Morrinhos</option>
-            </select>
-          </div>
+      <nav class="admin-tabs card" aria-label="Áreas administrativas">
+        <button type="button" data-tab="usuarios" data-permission="admin.usuarios">Usuários</button>
+        <button type="button" data-tab="perfis" data-permission="admin.perfis">Perfis e permissões</button>
+        <button type="button" data-tab="regionais" data-permission="admin.regionais">Regionais</button>
+      </nav>
+
+      <section class="admin-panel" data-panel="usuarios" hidden>
+        <div class="section-heading">
+          <div><span>Usuários</span><h2>Pessoas e acessos</h2><p>Crie usuários e altere perfil ou regional sem recriar a conta.</p></div>
+        </div>
+        <div class="admin-split">
+          <form id="formUsuario" class="card admin-form">
+            <h3>Novo usuário</h3>
+            <div class="form-group"><label for="nome">Nome</label><input id="nome" maxlength="100" required></div>
+            <div class="form-group">
+              <label for="senha">Senha temporária</label>
+              <input id="senha" type="password" minlength="10" maxlength="128" required>
+              <small>Use maiúscula, minúscula, número e símbolo.</small>
+            </div>
+            <div class="form-group"><label for="tipoUsuario">Perfil</label><select id="tipoUsuario" required></select></div>
+            <div class="form-group"><label for="regional">Regional</label><select id="regional" required></select></div>
+            <button type="submit">Criar usuário</button>
+          </form>
+          <section class="card data-card">
+            <div class="data-card-header"><h3>Usuários cadastrados</h3><span id="contadorUsuarios">0 usuários</span></div>
+            <div class="table-wrapper">
+              <table class="usuarios-table">
+                <thead><tr><th>Usuário</th><th>Perfil</th><th>Regional</th><th>Ações</th></tr></thead>
+                <tbody id="tabelaUsuarios"><tr><td colspan="4">Carregando...</td></tr></tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="admin-panel" data-panel="perfis" hidden>
+        <div class="section-heading">
+          <div><span>Perfis</span><h2>Perfis e permissões</h2><p>Monte acessos personalizados combinando as permissões disponíveis.</p></div>
+        </div>
+        <form id="formNovoPerfil" class="card inline-form">
+          <div class="form-group"><label for="perfilNome">Nome do perfil</label><input id="perfilNome" maxlength="100" required placeholder="Ex: Supervisor"></div>
+          <div class="form-group"><label for="perfilChave">Chave</label><input id="perfilChave" maxlength="50" required placeholder="Ex: supervisor"></div>
+          <div class="form-group grow"><label for="perfilDescricao">Descrição</label><input id="perfilDescricao" maxlength="255" placeholder="Responsabilidade deste perfil"></div>
           <button type="submit">Criar perfil</button>
         </form>
+        <div id="listaPerfis" class="profiles-grid"></div>
+      </section>
 
-        <section class="card usuarios-card">
-          <div class="usuarios-header">
-            <h2>Usuários cadastrados</h2>
-            <span id="contadorUsuarios">0 usuários</span>
-          </div>
-          <div class="table-wrapper">
-            <table>
-              <thead><tr><th>Nome</th><th>Perfil</th><th>Regional</th><th>Criado em</th></tr></thead>
-              <tbody id="tabelaUsuarios"><tr><td colspan="4">Carregando...</td></tr></tbody>
-            </table>
-          </div>
-        </section>
+      <section class="admin-panel" data-panel="regionais" hidden>
+        <div class="section-heading">
+          <div><span>Regionais</span><h2>Estrutura regional</h2><p>Crie regionais novas ou exclua regionais ainda sem dados vinculados.</p></div>
+        </div>
+        <form id="formRegional" class="card inline-form regional-form">
+          <div class="form-group"><label for="regionalCodigo">Código</label><input id="regionalCodigo" maxlength="20" required placeholder="Ex: GYN"></div>
+          <div class="form-group grow"><label for="regionalNome">Nome da regional</label><input id="regionalNome" maxlength="100" required placeholder="Ex: Goiânia"></div>
+          <button type="submit">Criar regional</button>
+        </form>
+        <div id="listaRegionais" class="regionais-grid"></div>
       </section>
     </main>
   </div>

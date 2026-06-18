@@ -219,7 +219,7 @@ async function exportarSolicitacoes(req, res) {
 
   const { pedidos, materiais } = await buscarDados(req.usuario.regional);
   const workbook = new ExcelJS.Workbook();
-  workbook.creator = "Controle de Materiais";
+  workbook.creator = "Coordina";
   workbook.created = new Date();
 
   if (tipo === "completo") adicionarResumo(workbook, pedidos, materiais, req.usuario.regional);

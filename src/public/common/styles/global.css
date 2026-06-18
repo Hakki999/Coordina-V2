@@ -430,6 +430,77 @@ tbody tr:hover {
   padding-right: 4px !important;
 }
 
+.nav-fixed {
+  display: grid;
+  gap: 5px;
+  padding-bottom: 10px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sidebar .nav-link-fixed {
+  min-height: 44px !important;
+}
+
+.nav-section {
+  display: grid;
+  gap: 4px;
+}
+
+.nav-section + .nav-section {
+  margin-top: 4px;
+}
+
+.nav-section[hidden] {
+  display: none !important;
+}
+
+.nav-group-toggle {
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  background: transparent;
+  box-shadow: none;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.nav-group-toggle:hover {
+  transform: none;
+  box-shadow: none;
+  color: var(--primary-dark);
+  background: var(--surface-soft);
+  border-color: var(--border);
+}
+
+.nav-chevron {
+  font-size: 20px;
+  line-height: 1;
+  transition: transform var(--transition);
+}
+
+.nav-section.is-open .nav-chevron {
+  transform: rotate(90deg);
+}
+
+.nav-group-links {
+  display: none;
+  gap: 5px;
+  padding: 2px 0 5px 8px;
+}
+
+.nav-section.is-open .nav-group-links {
+  display: grid;
+}
+
 .sidebar .nav-link {
   width: 100% !important;
   min-height: 48px !important;
@@ -466,7 +537,8 @@ tbody tr:hover {
   flex: none !important;
   display: inline-flex !important;
   justify-content: center !important;
-  font-size: 18px !important;
+  align-items: center !important;
+  font-size: 13px !important;
 }
 
 .sidebar-footer {
@@ -582,6 +654,27 @@ tbody tr:hover {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 10px;
+  }
+
+  .nav-section {
+    display: flex;
+    flex: none;
+    align-items: center;
+  }
+
+  .nav-section + .nav-section {
+    margin-top: 0;
+  }
+
+  .nav-group-toggle {
+    display: none;
+  }
+
+  .nav-group-links,
+  .nav-section.is-open .nav-group-links {
+    display: flex;
+    gap: 6px;
+    padding: 0;
   }
 
   .theme-switch {

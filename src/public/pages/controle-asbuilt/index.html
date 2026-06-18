@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Controle As-Built | Coordina</title>
+  <link rel="shortcut icon" href="/common/assets/logoIcon.png" type="image/x-icon">
+  <link rel="stylesheet" href="/common/styles/global.css">
+  <link rel="stylesheet" href="/common/styles/messages.css">
+  <link rel="stylesheet" href="/pages/controle-asbuilt/style.css?v=visual-config-2">
+</head>
+<body>
+  <div class="app-layout">
+    <aside class="sidebar" data-active="controleAsbuilt"></aside>
+    <main class="main-content asbuilt-control-page">
+      <header class="asbuilt-commandbar card">
+        <div class="command-title">
+          <span class="page-badge">Medição</span>
+          <div><h1>Controle As-Built</h1><small id="estadoCarga">Carregando...</small></div>
+        </div>
+        <label class="command-search"><span>Busca geral</span><input id="busca" type="search" placeholder="Buscar em toda a tabela"></label>
+        <nav class="command-actions" aria-label="Funções do controle As-Built">
+          <button id="btnNovaLinha" type="button">+ Projeto</button>
+          <button id="btnConsultarSgo" type="button" class="btn-secondary">Atualizar SGO</button>
+          <button id="btnAtualizarSelecionadas" type="button" class="btn-secondary">Atualizar colunas</button>
+          <button id="btnColunas" type="button" class="btn-secondary">Colunas</button>
+          <button id="btnValidacoes" type="button" class="btn-secondary">Validacoes</button>
+          <button id="btnConfigSgoTopo" type="button" class="btn-admin-action" hidden>Configurar SGO</button>
+          <button id="btnImportarAsbuiltTopo" type="button" class="btn-admin-action" hidden>Importar PROCX</button>
+          <button id="btnExportar" type="button" class="btn-secondary">Exportar</button>
+          <button id="btnAtualizar" type="button" class="btn-secondary">Recarregar</button>
+          <button id="btnConfigSgo" type="button" hidden></button>
+          <button id="btnImportarAsbuilt" type="button" hidden></button>
+        </nav>
+      </header>
+      <section class="sheet-card card">
+        <div class="sheet-wrapper" id="sheetWrapper">
+          <table id="tabelaAsbuilt" class="asbuilt-sheet" aria-label="Controle de As-Built"><tbody><tr><td class="empty-state">Carregando registros...</td></tr></tbody></table>
+        </div>
+        <footer class="sheet-pagination">
+          <button id="btnPaginaAnterior" type="button" class="btn-secondary">Anterior</button>
+          <span id="infoPaginacao">Pagina 1 de 1</span>
+          <button id="btnProximaPagina" type="button" class="btn-secondary">Proxima</button>
+          <label>Linhas<select id="limitePagina"><option value="100">100</option><option value="150" selected>150</option><option value="250">250</option><option value="500">500</option></select></label>
+        </footer>
+      </section>
+    </main>
+  </div>
+
+  <div id="modalNovoProjeto" class="modal-backdrop" hidden>
+    <form id="formNovoProjeto" class="modal-card">
+      <div><span class="page-badge">Novo registro</span><h2>Adicionar projeto</h2><p>Dados das pendências, materiais e SGO serão buscados automaticamente.</p></div>
+      <label>Projeto<input id="novoProjeto" required maxlength="100" autocomplete="off"></label>
+      <label>Versão<select id="novaVersao"><option value="V1">V1</option><option value="V2">V2</option></select></label>
+      <div class="modal-actions"><button id="btnCancelarNovo" type="button" class="btn-secondary">Cancelar</button><button type="submit">Adicionar</button></div>
+    </form>
+  </div>
+
+  <div id="modalColunas" class="modal-backdrop" hidden>
+    <section class="modal-card columns-modal">
+      <div><span class="page-badge">Visualização</span><h2>Escolher colunas</h2><p>Esta preferência fica salva neste navegador.</p></div>
+      <div id="listaColunas" class="columns-list"></div>
+      <section id="colunasAdminPanel" class="columns-admin" hidden>
+        <div class="section-title">
+          <div><h3>Gerenciar colunas e validacoes</h3><small>Abra apenas a coluna que deseja configurar.</small></div>
+          <button id="btnFecharValidacoes" type="button" class="btn-secondary">Fechar</button>
+        </div>
+        <form id="formNovaColuna" class="column-create-form">
+          <label>Titulo<input id="novaColunaTitulo" maxlength="120" placeholder="Ex: Fiscal"></label>
+          <label>Chave<input id="novaColunaCampo" maxlength="60" placeholder="fiscal"></label>
+          <label>Tipo<select id="novaColunaTipo"><option value="texto">Texto</option><option value="lista">Lista</option><option value="data">Data</option><option value="numero">Numero</option><option value="moeda">Moeda</option><option value="booleano">Sim/Nao</option></select></label>
+          <label id="novaColunaOpcoesLabel" hidden>Opcoes<textarea id="novaColunaOpcoes" rows="2" placeholder="Uma opcao por linha"></textarea></label>
+          <label>Valor padrao<input id="novaColunaValorPadrao" placeholder="Usado em novos projetos"></label>
+          <button type="submit">Adicionar coluna</button>
+        </form>
+        <div id="listaColunasAdmin" class="columns-admin-list"></div>
+      </section>
+      <div class="modal-actions"><button id="btnPadraoColunas" type="button" class="btn-secondary">Restaurar padrão</button><button id="btnCancelarColunas" type="button" class="btn-secondary">Cancelar</button><button id="btnSalvarColunas" type="button">Aplicar</button></div>
+    </section>
+  </div>
+
+  <div id="modalAtualizarColunas" class="modal-backdrop" hidden>
+    <section class="modal-card bulk-modal">
+      <div><span class="page-badge">Atualizacao em massa</span><h2>Atualizar colunas selecionadas</h2><p>Informe as colunas que receberao o mesmo valor nos registros selecionados.</p></div>
+      <div id="bulkColumnRows" class="bulk-column-rows"></div>
+      <div class="modal-actions"><button id="btnAdicionarBulkColuna" type="button" class="btn-secondary">+ Coluna</button><button id="btnCancelarBulkColunas" type="button" class="btn-secondary">Cancelar</button><button id="btnExecutarBulkColunas" type="button">Atualizar selecionados</button></div>
+    </section>
+  </div>
+
+  <div id="modalSgoConfig" class="modal-backdrop" hidden>
+    <section class="modal-card wide-modal">
+      <div class="modal-heading">
+        <div><span class="page-badge">Administrador</span><h2>Automação SGO</h2><p>Monte etapas encadeadas, teste uma solicitação e vincule os campos retornados às colunas do controle.</p></div>
+        <button id="btnFecharSgoConfig" type="button" class="btn-secondary">Fechar</button>
+      </div>
+      <div class="automation-grid">
+        <section class="config-column">
+          <label>Nome da automação<input id="sgoConfigNome" maxlength="150"></label>
+          <div id="sgoResumoVisual" class="visual-summary"></div>
+          <div class="section-title"><div><h3>Etapas de consulta</h3><small>Escolha qual consulta roda e qual dado alimenta a próxima etapa.</small></div><button id="btnAdicionarEtapa" type="button" class="btn-secondary">+ Etapa</button></div>
+          <div id="sgoEtapas" class="config-rows"></div>
+          <div class="section-title"><div><h3>Vínculos salvos</h3><small>Cada card mostra para qual coluna vai o dado retornado pelo SGO.</small></div><button id="btnAdicionarMapeamento" type="button" class="btn-secondary">+ Vínculo</button></div>
+          <div id="sgoMapeamentos" class="config-rows"></div>
+          <datalist id="sgoPathsDisponiveis"></datalist>
+        </section>
+        <aside class="test-column">
+          <h3>Testar, descobrir e vincular</h3>
+          <label>Projeto / nota para teste<input id="sgoTesteId" placeholder="Informe um projeto"></label>
+          <label>Usar dado selecionado como entrada da etapa<select id="sgoEtapaEntradaTeste"></select></label>
+          <button id="btnTestarSgoConfig" type="button">Executar pipeline pela VPN</button>
+          <p class="config-help">Para cada dado retornado, escolha diretamente o campo do controle, a transformação e a regra de atualização.</p>
+          <div class="test-field-head"><span>Dado retornado</span><span>Destino / regra</span></div>
+          <div id="sgoCamposTeste" class="test-fields"><div class="empty-state compact">Execute um teste para listar os campos retornados.</div></div>
+          <div id="sgoPreviewMapeamento" class="mapping-preview" hidden></div>
+        </aside>
+      </div>
+      <div class="modal-actions"><button id="btnSalvarSgoConfig" type="button">Salvar automação</button></div>
+    </section>
+  </div>
+
+  <div id="modalImportarAsbuilt" class="modal-backdrop" hidden>
+    <section class="modal-card wide-modal import-modal">
+      <div class="modal-heading">
+        <div><span class="page-badge">Administrador</span><h2>Importar dados em massa</h2><p>Analise a planilha, mapeie as colunas e escolha como os registros serão cruzados.</p></div>
+        <button id="btnFecharImportar" type="button" class="btn-secondary">Fechar</button>
+      </div>
+      <div class="import-controls">
+        <label>Arquivo Excel<input id="arquivoImportarAsbuilt" type="file" accept=".xlsx"></label>
+        <label>Aba<select id="importSheet"><option value="1">Primeira aba</option></select></label>
+        <label>Linha do cabeçalho<input id="importHeaderRow" type="number" min="1" value="1"></label>
+        <button id="btnAnalisarImportacao" type="button">Analisar planilha</button>
+      </div>
+      <div id="importOptions" class="import-options" hidden>
+        <label>Modo
+          <select id="importModo">
+            <option value="procurar_atualizar">PROCX: procurar e atualizar</option>
+            <option value="atualizar_ou_adicionar">Procurar, atualizar ou adicionar</option>
+            <option value="adicionar">Adicionar todas as linhas</option>
+          </select>
+        </label>
+        <label>Se encontrar mais de um registro
+          <select id="importAmbiguos">
+            <option value="ignorar">Ignorar a linha e avisar</option>
+            <option value="primeiro">Usar o primeiro encontrado</option>
+            <option value="erro">Interromper a linha com erro</option>
+          </select>
+        </label>
+        <label class="check-option"><input id="importSobrescreverVazios" type="checkbox"> Sobrescrever dados com células vazias</label>
+      </div>
+      <div id="importResumoVisual" class="visual-summary" hidden></div>
+      <section id="importLookupConfig" class="lookup-config" hidden>
+        <div class="section-title">
+          <div><h3>Chaves do PROCX</h3><small>Use uma ou várias condições. Quando houver mais de uma, todas devem encontrar o mesmo registro.</small></div>
+          <button id="btnAdicionarBuscaImportacao" type="button" class="btn-secondary">+ Chave de procura</button>
+        </div>
+        <div class="lookup-head"><span>Valor da planilha</span><span>Comparar com o controle</span><span>Forma de comparação</span><span></span></div>
+        <div id="importLookupRows" class="lookup-rows"></div>
+      </section>
+      <div id="importMapeamentos" class="import-mapping"><div class="empty-state compact">Escolha um arquivo e analise a planilha.</div></div>
+      <div id="importSimulation" class="import-simulation" hidden></div>
+      <div class="modal-actions">
+        <button id="btnSimularImportacao" type="button" class="btn-secondary" hidden>Simular PROCX</button>
+        <button id="btnExecutarImportacao" type="button" hidden>Executar importação</button>
+      </div>
+    </section>
+  </div>
+
+  <script src="/common/scripts/messages.js"></script>
+  <script src="/common/scripts/layout.js"></script>
+  <script src="/pages/medicao/get-sgo/sgo-client.js?v=visual-config-2"></script>
+  <script src="/pages/controle-asbuilt/script.js?v=visual-config-2"></script>
+</body>
+</html>

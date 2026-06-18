@@ -173,6 +173,11 @@ body {
   color: var(--danger-text);
 }
 
+.solicitacoes-table tbody tr.linha-concluida {
+  background: var(--success-soft);
+  box-shadow: inset 5px 0 0 var(--success);
+}
+
 /* ========================= */
 /* STATUS */
 /* ========================= */
@@ -211,6 +216,12 @@ body {
   background: #fee2e2;
   color: #991b1b;
   border: 1px solid #fecaca;
+}
+
+.status-concluido {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #86efac;
 }
 
 /* ========================= */

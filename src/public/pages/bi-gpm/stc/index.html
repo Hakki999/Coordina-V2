@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BI Produção</title>
+
+  <link rel="stylesheet" href="/pages/bi-gpm/stc/style.css">
+  <link rel="shortcut icon" href="/common/assets/logoIcon.png" type="image/x-icon">
+</head>
+
+<body>
+  <div class="background-grid"></div>
+
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loader-card">
+      <div class="loader"></div>
+      <strong>Carregando BI de Produção</strong>
+      <span>Buscando dados no backend...</span>
+    </div>
+  </div>
+
+  <main class="dashboard">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-icon">⚡</div>
+        <div>
+          <h1>BI de Produção - STC</h1>
+          <p id="subtitulo">Resumo mensal de equipes, serviços e produção</p>
+        </div>
+      </div>
+
+      <div class="meta-status-pill sem-meta" id="statusMetaHeader">
+          Sem meta
+        </div>
+
+      <div class="top-actions">
+        <a class="button-back" href="/home">Voltar</a>
+
+        <div class="status-pill">
+          <span class="status-dot" id="statusDot"></span>
+          <span id="statusSistema">Online</span>
+        </div>
+
+        <div class="clock-pill" id="relogio">--:--:--</div>
+
+        <select id="filtroMes" title="Selecionar mês">
+          <option value="">Carregando...</option>
+        </select>
+      </div>
+    </header>
+
+    <section class="ticker-wrap" aria-label="Resumo em movimento">
+      <div class="ticker" id="ticker">
+        <div class="ticker-item">
+          <span class="ticker-label">Aguardando dados...</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="cards">
+      <div class="card">
+        <span>Produção Total</span>
+        <div class="card-icon">💰</div>
+        <strong id="producaoTotal">R$ 0,00</strong>
+        <small id="deltaProducao">Comparativo mensal indisponível</small>
+      </div>
+
+      <div class="card">
+        <span>Meta Total</span>
+        <div class="card-icon">🎯</div>
+        <strong id="metaTotal">R$ 0,00</strong>
+        <small>Meta planejada no mês</small>
+      </div>
+
+      <div class="card">
+        <span>Saldo da Meta</span>
+        <div class="card-icon">📊</div>
+        <strong id="saldoMeta">R$ 0,00</strong>
+        <small>Produção menos meta</small>
+      </div>
+
+      <div class="card">
+        <span>Atingimento</span>
+        <div class="card-icon">📈</div>
+        <strong id="percentualMeta">0%</strong>
+        <small>Percentual da meta</small>
+      </div>
+
+      <div class="card" style="display:  none;">
+        <span>Qtd. Serviços</span>
+        <div class="card-icon">✅</div>
+        <strong id="qtdServicos">0</strong>
+        <small>Total executado no mês</small>
+      </div>
+
+      <div class="card">
+        <span>Qtd. Equipes</span>
+        <div class="card-icon">👷</div>
+        <strong id="qtdEquipes">0</strong>
+        <small>Equipes classificadas</small>
+      </div>
+    </section>
+
+    <section class="board">
+      <article class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Produção x Meta</h2>
+            <p class="hint">Comparativo mensal entre produzido e meta</p>
+          </div>
+          <span class="badge" id="badgeEvolucao">Últimos meses</span>
+        </div>
+
+        <div class="chart-area" id="chartEvolucao"></div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Produção por tipo</h2>
+            <p class="hint">Firminópolis, Jussara e Goias</p>
+          </div>
+          <span class="badge" id="badgeTipo">0%</span>
+        </div>
+
+        <div class="donut-layout">
+          <div class="donut" id="donutChart">
+            <div class="donut-center" id="donutCenter">
+              0%
+              <small>maior fatia</small>
+            </div>
+          </div>
+
+          <div class="legend" id="legendTipos"></div>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-header">
+          <div>
+            <h2 id="tituloTopEquipes">Top equipes</h2>
+            <p class="hint" id="hintTopEquipes">Maiores produções do mês</p>
+          </div>
+          <span class="badge" id="badgeTop">Top 5</span>
+        </div>
+
+        <div class="ranking-list" id="topEquipes"></div>
+      </article>
+
+      <article class="panel type-panel">
+        <div class="panel-header">
+          <div>
+            <h2 id="tituloRankingTipo">Ranking por classificação</h2>
+            <p class="hint" id="hintRankingTipo">Alternando entre maiores e menores equipes por tipo</p>
+          </div>
+          <span class="badge" id="badgeRankingTipo">Modo TV</span>
+        </div>  
+
+        <div class="type-grid" id="rankingPorTipo">
+
+          
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script src="/pages/bi-gpm/stc/main.js"></script>
+</body>
+
+</html>
