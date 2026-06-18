@@ -7,7 +7,7 @@
   <link rel="shortcut icon" href="/common/assets/logoIcon.png" type="image/x-icon">
   <link rel="stylesheet" href="/common/styles/global.css">
   <link rel="stylesheet" href="/common/styles/messages.css">
-  <link rel="stylesheet" href="/pages/controle-asbuilt/style.css?v=formula-columns-1">
+  <link rel="stylesheet" href="/pages/controle-asbuilt/style.css?v=delete-columns-db-2">
 </head>
 <body>
   <div class="app-layout">
@@ -25,6 +25,7 @@
           <button id="btnAtualizarSelecionadas" type="button" class="btn-secondary">Atualizar colunas</button>
           <button id="btnColunas" type="button" class="btn-secondary">Colunas</button>
           <button id="btnValidacoes" type="button" class="btn-secondary">Validacoes</button>
+          <button id="btnExcluirColunasDB" type="button" class="btn-danger">Excluir colunas</button>
           <button id="btnConfigSgoTopo" type="button" class="btn-admin-action" hidden>Configurar SGO</button>
           <button id="btnImportarAsbuiltTopo" type="button" class="btn-admin-action" hidden>Importar PROCX</button>
           <button id="btnExportar" type="button" class="btn-secondary">Exportar</button>
@@ -75,6 +76,13 @@
           <button type="submit">Adicionar coluna</button>
         </form>
         <div id="listaColunasAdmin" class="columns-admin-list"></div>
+        <section class="database-columns-panel">
+          <div>
+            <h3>Excluir colunas do banco de dados</h3>
+            <small>A exclusao e permanente e tambem remove os valores salvos nessa coluna. Colunas padrao do sistema nao podem ser apagadas do banco.</small>
+          </div>
+          <div id="listaColunasBanco" class="database-columns-list"></div>
+        </section>
       </section>
       <div class="modal-actions"><button id="btnPadraoColunas" type="button" class="btn-secondary">Restaurar padrão</button><button id="btnCancelarColunas" type="button" class="btn-secondary">Cancelar</button><button id="btnSalvarColunas" type="button">Aplicar</button></div>
     </section>
@@ -168,7 +176,7 @@
 
   <script src="/common/scripts/messages.js"></script>
   <script src="/common/scripts/layout.js"></script>
-  <script src="/pages/medicao/get-sgo/sgo-client.js?v=sgo-fetch-2"></script>
-  <script src="/pages/controle-asbuilt/script.js?v=formula-columns-1"></script>
+  <script src="/pages/medicao/get-sgo/sgo-client.js?v=sgo-fetch-exato-3"></script>
+  <script src="/pages/controle-asbuilt/script.js?v=delete-columns-db-2"></script>
 </body>
 </html>

@@ -404,6 +404,11 @@ function abrirValidacoes() {
   document.getElementById("modalColunas").hidden = false;
 }
 
+function abrirExclusaoColunasBanco() {
+  abrirValidacoes();
+  document.querySelector(".database-columns-panel")?.scrollIntoView({ block: "start" });
+}
+
 function salvarColunas() {
   camposVisiveis = new Set([...document.querySelectorAll("#listaColunas input:checked")].map(input => input.value));
   camposVisiveis.add("projeto");
@@ -440,12 +445,28 @@ function renderizarAdminColunas() {
         <label class="check-option"><input data-column-required type="checkbox" ${coluna.obrigatoria ? "checked" : ""} ${coluna.campo === "projeto" || coluna.formula ? "disabled" : ""}> Exigir valor ao editar</label>
         <div class="validation-actions">
           ${coluna.sistema ? '<span class="system-badge">Coluna padrao</span>' : ""}
-          ${coluna.campo === "projeto" ? "" : `<button type="button" class="btn-danger" data-delete-column>${coluna.sistema ? "Ocultar coluna" : "Excluir coluna"}</button>`}
+          ${coluna.sistema && coluna.campo !== "projeto" ? '<button type="button" class="btn-danger" data-delete-column>Ocultar coluna</button>' : ""}
           <button type="button" data-save-column>Salvar alteracoes</button>
         </div>
       </div>
     </details>
   `).join("");
+  renderizarColunasBanco();
+}
+
+function renderizarColunasBanco() {
+  const personalizadas = colunasAsbuilt.filter(coluna => !coluna.sistema);
+  document.getElementById("listaColunasBanco").innerHTML = personalizadas.length
+    ? personalizadas.map(coluna => `
+      <div class="database-column-row" data-database-column="${escapar(coluna.campo)}">
+        <span>
+          <strong>${escapar(coluna.titulo)}</strong>
+          <small>${escapar(coluna.campo)} · ${escapar(coluna.tipo)}${coluna.formula ? ` · ${escapar(coluna.formula)}` : ""}</small>
+        </span>
+        <button type="button" class="btn-danger" data-delete-db-column>Excluir do banco</button>
+      </div>
+    `).join("")
+    : '<div class="empty-state compact">Nao existem colunas personalizadas para excluir.</div>';
 }
 
 function dadosColunaDaLinha(linha) {
@@ -967,6 +988,7 @@ document.getElementById("btnAtualizar").addEventListener("click", () => carregar
 document.getElementById("btnExportar").addEventListener("click", exportarPlanilha);
 document.getElementById("btnColunas").addEventListener("click", abrirColunas);
 document.getElementById("btnValidacoes").addEventListener("click", abrirValidacoes);
+document.getElementById("btnExcluirColunasDB").addEventListener("click", abrirExclusaoColunasBanco);
 document.getElementById("btnAtualizarSelecionadas").addEventListener("click", abrirAtualizacaoColunas);
 document.getElementById("btnPaginaAnterior").addEventListener("click", () => carregarRegistros(paginacaoAsbuilt.pagina - 1));
 document.getElementById("btnProximaPagina").addEventListener("click", () => carregarRegistros(paginacaoAsbuilt.pagina + 1));
@@ -1014,6 +1036,11 @@ document.getElementById("listaColunasAdmin").addEventListener("click", event => 
   if (!linha) return;
   if (event.target.matches("[data-save-column]")) salvarColuna(linha).catch(error => msgErro(error.message));
   if (event.target.matches("[data-delete-column]")) excluirColuna(linha.dataset.columnField).catch(error => msgErro(error.message));
+});
+document.getElementById("listaColunasBanco").addEventListener("click", event => {
+  if (!event.target.matches("[data-delete-db-column]")) return;
+  const linha = event.target.closest("[data-database-column]");
+  excluirColuna(linha.dataset.databaseColumn).catch(error => msgErro(error.message));
 });
 document.getElementById("listaColunasAdmin").addEventListener("change", event => {
   if (!event.target.matches("[data-column-type]")) return;
@@ -1147,5 +1174,6 @@ document.addEventListener("usuario-carregado", event => {
   document.getElementById("btnConsultarSgo").hidden = !podeEditarAsbuilt;
   document.getElementById("btnAtualizarSelecionadas").hidden = !podeEditarAsbuilt;
   document.getElementById("btnValidacoes").hidden = !podeEditarAsbuilt;
+  document.getElementById("btnExcluirColunasDB").hidden = !podeEditarAsbuilt;
   carregarRegistros();
 });

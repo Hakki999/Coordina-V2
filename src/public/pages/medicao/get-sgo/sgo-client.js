@@ -32,21 +32,28 @@
   async function chamar(caminho, corpo, timeoutMs = 30000) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
+    const executar = credentials => fetch(`${BASE}${caminho}`, {
+      headers: {
+        accept: "application/json, text/plain, */*",
+        "accept-language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
+        authorization: AUTORIZACAO,
+        "content-type": "application/json;charset=UTF-8"
+      },
+      referrer: `${BASE}/`,
+      body: typeof corpo === "string" ? corpo : JSON.stringify(corpo),
+      method: "POST",
+      mode: "cors",
+      credentials,
+      signal: controller.signal
+    });
     try {
-      const response = await fetch(`${BASE}${caminho}`, {
-        headers: {
-          accept: "application/json, text/plain, */*",
-          "accept-language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
-          authorization: AUTORIZACAO,
-          "content-type": "application/json;charset=UTF-8"
-        },
-        body: typeof corpo === "string" ? corpo : JSON.stringify(corpo),
-        method: "POST",
-        mode: "cors",
-        cache: "no-store",
-        referrerPolicy: "no-referrer",
-        signal: controller.signal
-      });
+      let response;
+      try {
+        response = await executar("include");
+      } catch (error) {
+        if (!(error instanceof TypeError)) throw error;
+        response = await executar("omit");
+      }
       const texto = await response.text();
       let dados;
       try { dados = JSON.parse(texto); } catch { dados = texto; }
@@ -55,7 +62,7 @@
     } catch (error) {
       if (error.name === "AbortError") throw new Error("Tempo limite excedido na consulta SGO.");
       if (error instanceof TypeError) {
-        throw new Error("Nao foi possivel acessar o SGO. Confirme se a VPN esta conectada e tente novamente.");
+        throw new Error("O navegador bloqueou o acesso ao SGO. Confirme a VPN e permita ao site acessar a rede local.");
       }
       throw error;
     } finally {

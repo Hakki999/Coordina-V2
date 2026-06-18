@@ -466,7 +466,7 @@ tr.has-error .save-cell {
 
 .columns-admin {
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
   max-height: calc(100vh - 80px);
   gap: 12px;
 }
@@ -523,6 +523,32 @@ tr.has-error .save-cell {
 }
 
 .columns-admin-list { min-height: 0; overflow: auto; padding-right: 3px; }
+
+.database-columns-panel {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--danger-border);
+  border-radius: var(--radius-sm);
+  background: var(--danger-soft);
+}
+
+.database-columns-panel h3 { margin: 0; font-size: 12px; }
+.database-columns-panel > div > small { display: block; margin-top: 3px; color: var(--muted); font-size: 9px; }
+.database-columns-list { display: grid; gap: 6px; max-height: 170px; overflow: auto; }
+.database-column-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+.database-column-row span, .database-column-row strong, .database-column-row small { display: block; }
+.database-column-row strong { font-size: 10px; }
+.database-column-row small { margin-top: 2px; color: var(--muted); font-size: 8px; }
 
 .column-admin-row {
   border: 1px solid var(--border);
