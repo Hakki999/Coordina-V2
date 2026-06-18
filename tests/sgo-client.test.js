@@ -10,6 +10,16 @@ test("consulta SGO reproduz as opcoes do fetch original", () => {
   );
   assert.match(arquivo, /referrer:\s*`\$\{BASE\}\/`/);
   assert.match(arquivo, /mode:\s*"cors"/);
+  assert.match(arquivo, /targetAddressSpace:\s*"local"/);
   assert.match(arquivo, /executar\("include"\)/);
   assert.match(arquivo, /executar\("omit"\)/);
+});
+
+test("aplicacao permite solicitacao de acesso a rede local", () => {
+  const arquivo = fs.readFileSync(
+    path.join(__dirname, "../src/app.js"),
+    "utf8"
+  );
+  assert.match(arquivo, /local-network=\(self\)/);
+  assert.match(arquivo, /local-network-access=\(self\)/);
 });

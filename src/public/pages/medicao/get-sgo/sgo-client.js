@@ -44,6 +44,7 @@
       method: "POST",
       mode: "cors",
       credentials,
+      targetAddressSpace: "local",
       signal: controller.signal
     });
     try {
@@ -62,7 +63,10 @@
     } catch (error) {
       if (error.name === "AbortError") throw new Error("Tempo limite excedido na consulta SGO.");
       if (error instanceof TypeError) {
-        throw new Error("O navegador bloqueou o acesso ao SGO. Confirme a VPN e permita ao site acessar a rede local.");
+        if (!window.isSecureContext) {
+          throw new Error("Abra o Coordina pelo endereco HTTPS para consultar o SGO pela VPN.");
+        }
+        throw new Error("O navegador bloqueou o acesso ao SGO. Confirme a VPN e permita ao Coordina acessar a rede local.");
       }
       throw error;
     } finally {

@@ -15,7 +15,7 @@ app.use((req, res, next) => {
     "Referrer-Policy": "no-referrer",
     "X-Content-Type-Options": "nosniff",
     "X-Frame-Options": "DENY",
-    "Permissions-Policy": "camera=(), microphone=(), geolocation=()"
+    "Permissions-Policy": "camera=(), microphone=(), geolocation=(), local-network=(self), loopback-network=(self), local-network-access=(self)"
   });
   next();
 });
