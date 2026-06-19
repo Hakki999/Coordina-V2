@@ -25,6 +25,8 @@ async function login(req, res) {
   try {
     const nome = sanitizeText(req.body.nome, 100);
     const senha = String(req.body.senha ?? "");
+    req.usuario = { id: null, nome: nome || "Nao informado", tipo_usuario: null, regional: null, permissoes: [] };
+    req.auditoriaAcao = "TENTATIVA_LOGIN";
 
     if (!nome || !senha || senha.length > 128) {
       return res.status(400).json({ error: "Nome e senha são obrigatórios." });
@@ -37,6 +39,7 @@ async function login(req, res) {
     const usuario = rows[0];
 
     if (!usuario || !(await verifyPassword(senha, usuario.senha))) {
+      req.auditoriaAcao = "LOGIN_FALHOU";
       return res.status(401).json({ error: "Nome ou senha inválidos." });
     }
 
@@ -76,6 +79,14 @@ async function login(req, res) {
     `, [usuario.tipo_usuario]);
     const chaves = permissoes.map(item => item.chave);
     const destino = DESTINOS.find(([permissao]) => chaves.includes(permissao))?.[1] || "/";
+    req.usuario = {
+      id: usuario.id,
+      nome: usuario.nome,
+      tipo_usuario: usuario.tipo_usuario,
+      regional: usuario.regional,
+      permissoes: chaves
+    };
+    req.auditoriaAcao = "LOGIN";
 
     return res.json({
       message: "Login realizado com sucesso.",

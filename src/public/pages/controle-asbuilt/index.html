@@ -7,7 +7,7 @@
   <link rel="shortcut icon" href="/common/assets/logoIcon.png" type="image/x-icon">
   <link rel="stylesheet" href="/common/styles/global.css">
   <link rel="stylesheet" href="/common/styles/messages.css">
-  <link rel="stylesheet" href="/pages/controle-asbuilt/style.css?v=columns-order-formula-1">
+  <link rel="stylesheet" href="/pages/controle-asbuilt/style.css?v=minimal-v2-logs-1">
 </head>
 <body>
   <div class="app-layout">
@@ -15,21 +15,26 @@
     <main class="main-content asbuilt-control-page">
       <header class="asbuilt-commandbar card">
         <div class="command-title">
-          <span class="page-badge">Medição</span>
           <div><h1>Controle As-Built</h1><small id="estadoCarga">Carregando...</small></div>
         </div>
         <label class="command-search"><span>Busca geral</span><input id="busca" type="search" placeholder="Buscar em toda a tabela"></label>
         <nav class="command-actions" aria-label="Funções do controle As-Built">
           <button id="btnNovaLinha" type="button">+ Projeto</button>
           <button id="btnConsultarSgo" type="button" class="btn-secondary">Atualizar SGO</button>
-          <button id="btnAtualizarSelecionadas" type="button" class="btn-secondary">Atualizar colunas</button>
-          <button id="btnColunas" type="button" class="btn-secondary">Colunas</button>
-          <button id="btnValidacoes" type="button" class="btn-secondary" hidden>Validacoes</button>
-          <button id="btnExcluirColunasDB" type="button" class="btn-danger" hidden>Excluir colunas</button>
-          <button id="btnConfigSgoTopo" type="button" class="btn-admin-action" hidden>Configurar SGO</button>
-          <button id="btnImportarAsbuiltTopo" type="button" class="btn-admin-action" hidden>Importar PROCX</button>
-          <button id="btnExportar" type="button" class="btn-secondary">Exportar</button>
-          <button id="btnAtualizar" type="button" class="btn-secondary">Recarregar</button>
+          <button id="btnAtualizarV2Sgo" type="button" class="btn-secondary">Atualizar V2</button>
+          <details class="command-menu" id="menuAcoesControle">
+            <summary title="Mais ações" aria-label="Mais ações">•••</summary>
+            <div>
+              <button id="btnAtualizarSelecionadas" type="button">Atualizar colunas</button>
+              <button id="btnColunas" type="button">Organizar colunas</button>
+              <button id="btnExportar" type="button">Exportar Excel</button>
+              <button id="btnAtualizar" type="button">Recarregar dados</button>
+              <button id="btnValidacoes" type="button" hidden>Validações</button>
+              <button id="btnExcluirColunasDB" type="button" class="danger-action" hidden>Excluir colunas</button>
+              <button id="btnConfigSgoTopo" type="button" hidden>Configurar SGO</button>
+              <button id="btnImportarAsbuiltTopo" type="button" hidden>Importar PROCX</button>
+            </div>
+          </details>
           <button id="btnConfigSgo" type="button" hidden></button>
           <button id="btnImportarAsbuilt" type="button" hidden></button>
         </nav>
@@ -93,6 +98,25 @@
       <div><span class="page-badge">Atualizacao em massa</span><h2>Atualizar colunas selecionadas</h2><p>Informe as colunas que receberao o mesmo valor nos registros selecionados.</p></div>
       <div id="bulkColumnRows" class="bulk-column-rows"></div>
       <div class="modal-actions"><button id="btnAdicionarBulkColuna" type="button" class="btn-secondary">+ Coluna</button><button id="btnCancelarBulkColunas" type="button" class="btn-secondary">Cancelar</button><button id="btnExecutarBulkColunas" type="button">Atualizar selecionados</button></div>
+    </section>
+  </div>
+
+  <div id="modalAtualizarV2" class="modal-backdrop" hidden>
+    <section class="modal-card v2-progress-modal">
+      <div class="modal-heading">
+        <div><span class="page-badge">SGO</span><h2>Atualizar projetos V2</h2><p id="v2StatusTexto">Preparando atualização...</p></div>
+        <button id="btnFecharV2" type="button" class="btn-secondary" hidden>Fechar</button>
+      </div>
+      <div class="v2-progress-track"><span id="v2ProgressBar"></span></div>
+      <div class="v2-progress-metrics">
+        <div><strong id="v2Processados">0</strong><span>Processados</span></div>
+        <div><strong id="v2Atualizados">0</strong><span>Atualizados</span></div>
+        <div><strong id="v2Erros">0</strong><span>Erros</span></div>
+      </div>
+      <div id="v2ErrosLista" class="v2-errors" hidden></div>
+      <div class="modal-actions">
+        <button id="btnCancelarV2" type="button" class="btn-secondary">Cancelar</button>
+      </div>
     </section>
   </div>
 
@@ -177,6 +201,6 @@
   <script src="/common/scripts/messages.js"></script>
   <script src="/common/scripts/layout.js"></script>
   <script src="/pages/medicao/get-sgo/sgo-client.js?v=local-network-https-1"></script>
-  <script src="/pages/controle-asbuilt/script.js?v=columns-order-formula-1"></script>
+  <script src="/pages/controle-asbuilt/script.js?v=minimal-v2-logs-1"></script>
 </body>
 </html>

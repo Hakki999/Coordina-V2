@@ -13,23 +13,24 @@ body {
 }
 
 .asbuilt-commandbar {
-  min-height: 58px;
-  padding: 8px 10px;
+  min-height: 52px;
+  padding: 7px 8px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  border-radius: var(--radius-md);
+  gap: 8px;
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: none;
 }
 
 .command-title {
   display: flex;
   align-items: center;
-  gap: 9px;
-  min-width: 220px;
+  min-width: 180px;
 }
 
 .command-title h1 {
-  font-size: 17px;
+  font-size: 15px;
   line-height: 1.1;
 }
 
@@ -54,7 +55,7 @@ body {
 
 .command-search {
   flex: 1;
-  min-width: 170px;
+  min-width: 190px;
   margin: 0;
 }
 
@@ -63,94 +64,98 @@ body {
 }
 
 .command-search input {
-  height: 38px;
-  padding: 8px 11px;
-  border-radius: var(--radius-sm);
-  font-size: 12px;
+  height: 34px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  background: var(--surface-soft);
+  font-size: 11px;
 }
 
 .command-actions {
   display: flex;
   align-items: center;
-  gap: 5px;
-  overflow-x: auto;
+  gap: 4px;
+  overflow: visible;
 }
 
 .command-actions button,
 .command-actions .btn {
-  min-height: 36px;
-  padding: 9px 11px;
-  border-radius: var(--radius-sm);
-  font-size: 11px;
+  min-height: 34px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-size: 10px;
   white-space: nowrap;
 }
 
-.btn-admin-action {
-  border: 1px solid rgba(29, 78, 216, .24);
-  color: var(--primary-dark);
-  background: var(--primary-soft);
-  box-shadow: none;
-}
-
-.btn-admin-action:hover {
-  color: #ffffff;
-  background: linear-gradient(135deg, var(--primary), #38bdf8);
-}
-
-.command-more {
+.command-menu {
   position: relative;
 }
 
-.command-more summary {
-  min-height: 36px;
-  padding: 10px 12px;
+.command-menu summary {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  border-radius: 6px;
   color: var(--text);
-  background: var(--surface-soft);
+  background: var(--surface);
   cursor: pointer;
-  font-size: 11px;
-  font-weight: 800;
+  font-size: 13px;
+  font-weight: 900;
   list-style: none;
 }
 
-.command-more summary::-webkit-details-marker {
+.command-menu summary::-webkit-details-marker {
   display: none;
 }
 
-.command-more[open]>div {
-  position: fixed;
-  z-index: 20;
-  right: 20px;
-  top: 68px;
-  width: 190px;
-  padding: 7px;
-  display: grid;
-  gap: 3px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface);
-  box-shadow: var(--shadow-card);
+.command-menu[open] summary {
+  border-color: var(--primary);
+  color: var(--primary-dark);
+  background: var(--primary-soft);
 }
 
-.command-more a,
-.command-more div button {
+.command-menu > div {
+  position: absolute;
+  z-index: 30;
+  top: 40px;
+  right: 0;
+  width: 205px;
+  padding: 5px;
+  display: grid;
+  gap: 2px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.command-menu > div button {
   width: 100%;
-  min-height: 34px;
-  height: 34px;
-  padding: 8px 10px;
+  min-height: 32px;
+  padding: 7px 9px;
+  justify-content: flex-start;
   border: 0;
-  border-radius: var(--radius-sm);
-  color: var(--text);
+  color: var(--text-soft);
   background: transparent;
   box-shadow: none;
   text-align: left;
-  font-size: 11px;
 }
 
-.command-more a:hover,
-.command-more div button:hover {
-  background: var(--hover-bg);
+.command-menu > div button:hover {
+  transform: none;
+  color: var(--text);
+  background: var(--surface-soft);
+  box-shadow: none;
+}
+
+.command-menu > div .danger-action {
+  color: var(--danger-text);
+}
+
+.command-menu > div .danger-action:hover {
+  background: var(--danger-soft);
 }
 
 .sheet-card {
@@ -639,6 +644,73 @@ tr.has-error .save-cell {
   width: min(720px, 100%);
 }
 
+.v2-progress-modal {
+  width: min(560px, 100%);
+}
+
+.v2-progress-track {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--surface-muted);
+}
+
+.v2-progress-track span {
+  width: 0;
+  height: 100%;
+  display: block;
+  background: var(--primary);
+  transition: width .2s ease;
+}
+
+.v2-progress-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.v2-progress-metrics div {
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-soft);
+}
+
+.v2-progress-metrics strong,
+.v2-progress-metrics span {
+  display: block;
+}
+
+.v2-progress-metrics strong {
+  font-size: 20px;
+}
+
+.v2-progress-metrics span {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.v2-errors {
+  max-height: 180px;
+  overflow: auto;
+  padding: 9px;
+  display: grid;
+  gap: 5px;
+  border: 1px solid var(--danger);
+  border-radius: 6px;
+  background: var(--danger-soft);
+  color: var(--danger-text);
+  font-size: 10px;
+}
+
+.v2-errors strong,
+.v2-errors span {
+  display: block;
+}
+
 .bulk-column-row {
   display: grid;
   grid-template-columns: minmax(160px, 1fr) minmax(180px, 1fr) 32px;
@@ -1057,7 +1129,7 @@ tr.has-error .save-cell {
   }
 
   .command-actions {
-    flex: 1;
+    margin-left: auto;
   }
 
   .automation-grid {

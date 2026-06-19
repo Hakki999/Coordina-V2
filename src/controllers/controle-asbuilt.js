@@ -428,6 +428,24 @@ async function listar(req, res) {
   });
 }
 
+async function listarProjetosV2Sgo(req, res) {
+  const colunas = await listarColunasControle();
+  const [registros] = await db.execute(`
+    SELECT a.id, a.regional, ${COLUNAS.map(coluna => `a.${coluna.campo}`).join(", ")},
+      a.pdf_nome, a.pdf_arquivo, a.criado_por, a.concluido_por, a.atualizado_por,
+      a.criado_em, a.atualizado_em, criador.nome AS criado_por_nome,
+      concluidor.nome AS concluido_por_nome
+    FROM controle_asbuilt a
+    LEFT JOIN usuarios criador ON criador.id = a.criado_por
+    LEFT JOIN usuarios concluidor ON concluidor.id = a.concluido_por
+    WHERE a.regional = ? AND UPPER(TRIM(COALESCE(a.versao, ''))) = 'V2'
+      AND a.projeto IS NOT NULL AND TRIM(a.projeto) <> ''
+    ORDER BY a.id
+  `, [req.usuario.regional]);
+  await anexarValoresCustomizados(registros, colunas);
+  res.json({ registros, total: registros.length });
+}
+
 async function criar(req, res) {
   const informados = req.body?.dados && typeof req.body.dados === "object" ? req.body.dados : {};
   const projeto = sanitizeText(informados.projeto, 100);
@@ -929,6 +947,7 @@ module.exports = {
   salvarValoresCustomizados,
   buscarRegistro,
   listar,
+  listarProjetosV2Sgo,
   criar,
   atualizar,
   atualizarDados,

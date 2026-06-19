@@ -1,6 +1,7 @@
 const express = require("express");
 const cookieParser = require("cookie-parser");
 const path = require("path");
+const auditoria = require("./middlewares/auditoria");
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.use((req, res, next) => {
 
 app.use(express.json({ limit: "100kb", strict: true }));
 app.use(cookieParser());
+app.use(auditoria);
 
 app.use((req, res, next) => {
   if (!["GET", "HEAD", "OPTIONS"].includes(req.method)) {

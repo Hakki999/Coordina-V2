@@ -23,7 +23,8 @@ const itensMenu = [
     icone: "🔐",
     texto: "Controle de acesso",
     permissoes: ["admin.usuarios", "admin.perfis", "admin.regionais"]
-  }
+  },
+  { id: "logs", grupo: "AdministraÃ§Ã£o", href: "/logs", icone: "≡", texto: "Logs de atividade", adminOnly: true }
 ];
 
 const fetchOriginal = window.fetch.bind(window);
@@ -109,10 +110,12 @@ function renderizarSidebar() {
   });
 }
 
-function ajustarMenu(permissoesUsuario) {
-  const permissoes = new Set(permissoesUsuario || []);
+function ajustarMenu(usuario) {
+  const permissoes = new Set(usuario?.permissoes || []);
   itensMenu.forEach(item => {
-    const permitido = item.permissao
+    const permitido = item.adminOnly
+      ? usuario?.tipo_usuario === "admin"
+      : item.permissao
       ? permissoes.has(item.permissao)
       : item.permissoes?.some(permissao => permissoes.has(permissao));
     const link = document.getElementById(item.id);
@@ -139,7 +142,7 @@ async function carregarUsuarioLogado() {
     if (nome) nome.textContent = usuario.nome;
     if (perfilElement) perfilElement.textContent = `${usuario.perfil_nome || usuario.tipo_usuario} · ${usuario.regional}`;
     if (regional) regional.textContent = `Regional ${usuario.regional}`;
-    ajustarMenu(usuario.permissoes);
+    ajustarMenu(usuario);
     document.dispatchEvent(new CustomEvent("usuario-carregado", { detail: usuario }));
   } catch {
     window.location.replace("/");

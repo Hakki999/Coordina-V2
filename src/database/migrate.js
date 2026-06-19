@@ -312,6 +312,29 @@ async function migrate() {
   `);
 
   await db.query(`
+    CREATE TABLE IF NOT EXISTS auditoria_logs (
+      id BIGINT NOT NULL AUTO_INCREMENT,
+      usuario_id INT NULL,
+      usuario_nome VARCHAR(100) NOT NULL,
+      tipo_usuario VARCHAR(50) NULL,
+      regional VARCHAR(20) NULL,
+      acao VARCHAR(100) NOT NULL,
+      metodo VARCHAR(10) NOT NULL,
+      rota VARCHAR(255) NOT NULL,
+      status_http SMALLINT NOT NULL DEFAULT 0,
+      sucesso TINYINT(1) NOT NULL DEFAULT 0,
+      ip VARCHAR(64) NULL,
+      user_agent VARCHAR(500) NULL,
+      detalhes_json LONGTEXT NULL,
+      criado_em TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (id),
+      KEY idx_auditoria_criado (criado_em),
+      KEY idx_auditoria_usuario (usuario_id, criado_em),
+      KEY idx_auditoria_acao (acao, criado_em)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `);
+
+  await db.query(`
     CREATE TABLE IF NOT EXISTS estoque_fisico (
       id INT NOT NULL AUTO_INCREMENT,
       regional VARCHAR(20) NOT NULL,

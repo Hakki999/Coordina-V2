@@ -29,6 +29,7 @@ const sgoConfig = require("../controllers/medicao/sgo-config");
 const estoque = require("../controllers/almoxarifado/estoque");
 const almoxarifadoDashboard = require("../controllers/almoxarifado/dashboard");
 const biGpm = require("../controllers/bi/gpm");
+const adminLogs = require("../controllers/admin-logs");
 
 const loginLimit = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -53,6 +54,7 @@ router.get("/dashboard-almoxarifado", verificarToken, autorizar("almoxarifado.da
 router.get("/bi-gpm/execucao", verificarToken, autorizar("bi.gpm.visualizar"), pagina("pages/bi-gpm/execucao/index.html"));
 router.get("/bi-gpm/stc", verificarToken, autorizar("bi.gpm.visualizar"), pagina("pages/bi-gpm/stc/index.html"));
 router.get("/perfis", verificarToken, autorizar("admin.usuarios", "admin.perfis", "admin.regionais"), pagina("pages/perfis/index.html") );
+router.get("/logs", verificarToken, exigirAdmin, pagina("pages/admin-logs/index.html"));
 
 router.get("/perfil", verificarToken, (req, res) => {
   res.json({
@@ -107,6 +109,12 @@ router.get(
   verificarToken,
   autorizar("medicao.controle_asbuilt.visualizar", "medicao.controle_asbuilt.editar"),
   exportarControleAsbuilt
+);
+router.get(
+  "/api/controle-asbuilt/sgo-v2",
+  verificarToken,
+  autorizar("medicao.controle_asbuilt.editar"),
+  controleAsbuilt.listarProjetosV2Sgo
 );
 router.post("/api/controle-asbuilt", verificarToken, autorizar("medicao.controle_asbuilt.editar"), controleAsbuilt.criar);
 router.put("/api/controle-asbuilt/atualizar-colunas", verificarToken, autorizar("medicao.controle_asbuilt.editar"), controleAsbuilt.atualizarColunas);
@@ -195,6 +203,7 @@ router.put("/api/usuarios/:id", verificarToken, autorizar("admin.usuarios"), atu
 router.delete("/api/usuarios/:id", verificarToken, autorizar("admin.usuarios"), excluirUsuario);
 
 router.get("/api/admin/acessos", verificarToken, autorizar("admin.usuarios", "admin.perfis", "admin.regionais"), listarAdministracao);
+router.get("/api/admin/logs", verificarToken, exigirAdmin, adminLogs.listar);
 router.post("/api/admin/perfis", verificarToken, autorizar("admin.perfis"), criarPerfil);
 router.put("/api/admin/perfis/:id", verificarToken, autorizar("admin.perfis"), atualizarPerfil);
 router.delete("/api/admin/perfis/:id", verificarToken, autorizar("admin.perfis"), excluirPerfil);

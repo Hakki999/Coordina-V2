@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Logs de atividade | Coordina</title>
+  <link rel="shortcut icon" href="/common/assets/logoIcon.png" type="image/x-icon">
+  <link rel="stylesheet" href="/common/styles/global.css">
+  <link rel="stylesheet" href="/common/styles/messages.css">
+  <link rel="stylesheet" href="/pages/admin-logs/style.css?v=1">
+</head>
+<body>
+  <div class="app-layout">
+    <aside class="sidebar" data-active="logs"></aside>
+    <main class="main-content logs-page">
+      <header class="logs-header">
+        <div>
+          <span>Administração</span>
+          <h1>Logs de atividade</h1>
+          <p id="logsResumo">Carregando movimentações...</p>
+        </div>
+        <button id="btnAtualizarLogs" type="button" class="btn-secondary">Atualizar</button>
+      </header>
+
+      <section class="logs-filters" aria-label="Filtros dos logs">
+        <label>Usuário<input id="filtroUsuario" type="search" placeholder="Nome ou ID"></label>
+        <label>Ação<select id="filtroAcao"><option value="">Todas as ações</option></select></label>
+        <label>Status<select id="filtroStatus"><option value="">Todos</option><option value="sucesso">Sucesso</option><option value="erro">Erro</option></select></label>
+        <label>Início<input id="filtroInicio" type="date"></label>
+        <label>Fim<input id="filtroFim" type="date"></label>
+        <button id="btnLimparLogs" type="button" class="btn-secondary">Limpar</button>
+      </section>
+
+      <section class="logs-table-wrap">
+        <table class="logs-table">
+          <thead>
+            <tr><th>Data</th><th>Usuário</th><th>Ação</th><th>Rota</th><th>Status</th><th>Origem</th><th></th></tr>
+          </thead>
+          <tbody id="logsBody"><tr><td colspan="7" class="logs-empty">Carregando...</td></tr></tbody>
+        </table>
+      </section>
+
+      <footer class="logs-pagination">
+        <button id="btnLogsAnterior" type="button" class="btn-secondary">Anterior</button>
+        <span id="logsPagina">Página 1 de 1</span>
+        <button id="btnLogsProxima" type="button" class="btn-secondary">Próxima</button>
+      </footer>
+    </main>
+  </div>
+
+  <div id="modalLog" class="modal-backdrop" hidden>
+    <section class="modal-card log-detail">
+      <div class="log-detail-head">
+        <div><span id="logDetalheAcao"></span><h2>Detalhes da movimentação</h2></div>
+        <button id="btnFecharLog" type="button" class="btn-secondary">Fechar</button>
+      </div>
+      <dl id="logDetalheMeta"></dl>
+      <pre id="logDetalheJson"></pre>
+    </section>
+  </div>
+
+  <script src="/common/scripts/messages.js"></script>
+  <script src="/common/scripts/layout.js"></script>
+  <script src="/pages/admin-logs/script.js?v=1"></script>
+</body>
+</html>

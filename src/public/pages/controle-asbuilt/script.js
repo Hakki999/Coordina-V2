@@ -13,6 +13,8 @@ let camposTesteSgo = [];
 let paginacaoAsbuilt = { pagina: 1, limite: 150, total: 0, totalPaginas: 1 };
 let filtroTimer = null;
 let campoColunaArrastada = null;
+let cancelarAtualizacaoV2 = false;
+let atualizacaoV2EmAndamento = false;
 const selecionados = new Set();
 const filtrosColuna = new Map();
 const timersSalvamento = new Map();
@@ -373,6 +375,94 @@ async function atualizarSgoRegistros(registros, automatico = false) {
       ? "Projeto adicionado. A atualização automática do SGO precisa da VPN ativa."
       : erros.slice(0, 3).join(" | ");
     msgAviso(mensagem);
+  }
+}
+
+function atualizarPainelV2({ processados, total, atualizados, erros, texto }) {
+  const percentual = total ? Math.round((processados / total) * 100) : 0;
+  document.getElementById("v2ProgressBar").style.width = `${percentual}%`;
+  document.getElementById("v2Processados").textContent = String(processados);
+  document.getElementById("v2Atualizados").textContent = String(atualizados);
+  document.getElementById("v2Erros").textContent = String(erros);
+  document.getElementById("v2StatusTexto").textContent = texto;
+}
+
+async function atualizarTodosV2Sgo() {
+  if (atualizacaoV2EmAndamento) return;
+  if (!confirm("Atualizar pelo SGO todos os projetos V2 da sua regional? A VPN deve permanecer conectada.")) return;
+
+  cancelarAtualizacaoV2 = false;
+  atualizacaoV2EmAndamento = true;
+  const modal = document.getElementById("modalAtualizarV2");
+  const listaErros = document.getElementById("v2ErrosLista");
+  modal.hidden = false;
+  listaErros.hidden = true;
+  listaErros.innerHTML = "";
+  document.getElementById("btnCancelarV2").hidden = false;
+  document.getElementById("btnCancelarV2").disabled = false;
+  document.getElementById("btnFecharV2").hidden = true;
+  atualizarPainelV2({ processados: 0, total: 0, atualizados: 0, erros: 0, texto: "Buscando projetos V2..." });
+
+  let processados = 0;
+  let atualizados = 0;
+  const falhas = [];
+  try {
+    const data = await requisicao("/api/controle-asbuilt/sgo-v2");
+    const projetos = data.registros || [];
+    if (!projetos.length) {
+      atualizarPainelV2({ processados: 0, total: 0, atualizados: 0, erros: 0, texto: "Nenhum projeto V2 encontrado nesta regional." });
+      return;
+    }
+
+    for (const registro of projetos) {
+      if (cancelarAtualizacaoV2) break;
+      atualizarPainelV2({
+        processados,
+        total: projetos.length,
+        atualizados,
+        erros: falhas.length,
+        texto: `Consultando ${registro.projeto} (${processados + 1} de ${projetos.length})`
+      });
+      try {
+        const resultado = await window.sgoClient.consultarDadosProjeto(registro.projeto, registro);
+        if (Object.keys(resultado.dados || {}).length) {
+          await requisicao(`/api/controle-asbuilt/${registro.id}/dados`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ dados: resultado.dados })
+          });
+          atualizados += 1;
+        }
+      } catch (error) {
+        falhas.push(`${registro.projeto}: ${error.message}`);
+      }
+      processados += 1;
+    }
+
+    const interrompida = cancelarAtualizacaoV2;
+    atualizarPainelV2({
+      processados,
+      total: projetos.length,
+      atualizados,
+      erros: falhas.length,
+      texto: interrompida
+        ? `Atualização cancelada após ${processados} projeto(s).`
+        : `Atualização concluída: ${atualizados} projeto(s) alterado(s).`
+    });
+    if (falhas.length) {
+      listaErros.hidden = false;
+      listaErros.innerHTML = `<strong>Projetos com erro</strong>${falhas.slice(0, 100).map(item => `<span>${escapar(item)}</span>`).join("")}`;
+    }
+    await carregarRegistros(paginacaoAsbuilt.pagina);
+  } catch (error) {
+    falhas.push(error.message);
+    atualizarPainelV2({ processados, total: processados, atualizados, erros: falhas.length, texto: error.message });
+    listaErros.hidden = false;
+    listaErros.innerHTML = `<span>${escapar(error.message)}</span>`;
+  } finally {
+    atualizacaoV2EmAndamento = false;
+    document.getElementById("btnCancelarV2").hidden = true;
+    document.getElementById("btnFecharV2").hidden = false;
   }
 }
 
@@ -1062,6 +1152,7 @@ async function executarImportacao() {
 document.getElementById("busca").addEventListener("input", () => agendarCarregamento(1));
 document.getElementById("btnAtualizar").addEventListener("click", () => carregarRegistros(paginacaoAsbuilt.pagina));
 document.getElementById("btnExportar").addEventListener("click", exportarPlanilha);
+document.getElementById("btnAtualizarV2Sgo").addEventListener("click", atualizarTodosV2Sgo);
 document.getElementById("btnColunas").addEventListener("click", abrirColunas);
 document.getElementById("btnValidacoes").addEventListener("click", abrirValidacoes);
 document.getElementById("btnExcluirColunasDB").addEventListener("click", abrirExclusaoColunasBanco);
@@ -1136,6 +1227,17 @@ document.getElementById("btnAdicionarBulkColuna").addEventListener("click", () =
 document.getElementById("btnCancelarBulkColunas").addEventListener("click", () => { document.getElementById("modalAtualizarColunas").hidden = true; });
 document.getElementById("btnExecutarBulkColunas").addEventListener("click", () => {
   executarAtualizacaoColunas().catch(error => msgErro(error.message));
+});
+document.getElementById("btnCancelarV2").addEventListener("click", () => {
+  cancelarAtualizacaoV2 = true;
+  document.getElementById("btnCancelarV2").disabled = true;
+  document.getElementById("v2StatusTexto").textContent = "Cancelando após a consulta atual...";
+});
+document.getElementById("btnFecharV2").addEventListener("click", () => {
+  document.getElementById("modalAtualizarV2").hidden = true;
+});
+document.getElementById("menuAcoesControle").addEventListener("click", event => {
+  if (event.target.closest("button")) event.currentTarget.removeAttribute("open");
 });
 document.getElementById("bulkColumnRows").addEventListener("change", event => {
   if (event.target.matches("[data-bulk-field]")) atualizarInputBulk(event.target.closest(".bulk-column-row"));
@@ -1256,6 +1358,7 @@ document.addEventListener("usuario-carregado", event => {
   document.getElementById("btnImportarAsbuiltTopo").hidden = !podeImportarAsbuilt;
   document.getElementById("btnNovaLinha").hidden = !podeEditarAsbuilt;
   document.getElementById("btnConsultarSgo").hidden = !podeEditarAsbuilt;
+  document.getElementById("btnAtualizarV2Sgo").hidden = !podeEditarAsbuilt;
   document.getElementById("btnAtualizarSelecionadas").hidden = !podeEditarAsbuilt;
   document.getElementById("btnValidacoes").hidden = !podeAdministrarColunas;
   document.getElementById("btnExcluirColunasDB").hidden = !podeAdministrarColunas;
