@@ -20,7 +20,13 @@
     },
     ObterNotaPorPEP: { nome: "Nota por PEP", caminho: "/Service/SolicitacaoInvestimentoService.svc/rest/ListarSolicitacaoInvestimentoPorPEP", corpo: id => ({ PEP: id }) }
   };
+  const LIMITE_REQUISICOES_SGO = 6;
+  const consultasEmAndamento = new Map();
+  const filaRequisicoes = [];
+  let requisicoesAtivas = 0;
   let configuracaoCache;
+  let configuracaoPromise;
+  let credenciaisPreferidas = "include";
 
   const normalizarChave = valor => String(valor || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
@@ -29,49 +35,93 @@
     return caminho.split("/").filter(Boolean).at(-1);
   }
 
-  async function chamar(caminho, corpo, timeoutMs = 30000) {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), timeoutMs);
-    const executar = credentials => fetch(`${BASE}${caminho}`, {
-      headers: {
-        accept: "application/json, text/plain, */*",
-        "accept-language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
-        authorization: AUTORIZACAO,
-        "content-type": "application/json;charset=UTF-8"
-      },
-      referrer: `${BASE}/`,
-      body: typeof corpo === "string" ? corpo : JSON.stringify(corpo),
-      method: "POST",
-      mode: "cors",
-      credentials,
-      targetAddressSpace: "local",
-      signal: controller.signal
-    });
-    try {
-      let response;
-      try {
-        response = await executar("include");
-      } catch (error) {
-        if (!(error instanceof TypeError)) throw error;
-        response = await executar("omit");
-      }
-      const texto = await response.text();
-      let dados;
-      try { dados = JSON.parse(texto); } catch { dados = texto; }
-      if (!response.ok) throw new Error(`SGO respondeu HTTP ${response.status}.`);
-      return dados;
-    } catch (error) {
-      if (error.name === "AbortError") throw new Error("Tempo limite excedido na consulta SGO.");
-      if (error instanceof TypeError) {
-        if (!window.isSecureContext) {
-          throw new Error("Abra o Coordina pelo endereco HTTPS para consultar o SGO pela VPN.");
-        }
-        throw new Error("O navegador bloqueou o acesso ao SGO. Confirme a VPN e permita ao Coordina acessar a rede local.");
-      }
-      throw error;
-    } finally {
-      clearTimeout(timeout);
+  function liberarRequisicao() {
+    requisicoesAtivas = Math.max(0, requisicoesAtivas - 1);
+    const proxima = filaRequisicoes.shift();
+    if (proxima) {
+      requisicoesAtivas += 1;
+      proxima();
     }
+  }
+
+  async function comLimiteDeRequisicoes(executor) {
+    if (requisicoesAtivas >= LIMITE_REQUISICOES_SGO) {
+      await new Promise(resolve => filaRequisicoes.push(resolve));
+    } else {
+      requisicoesAtivas += 1;
+    }
+    try {
+      return await executor();
+    } finally {
+      liberarRequisicao();
+    }
+  }
+
+  async function processarEmParalelo(itens, executor, limite = 4, deveParar = () => false) {
+    const lista = Array.from(itens || []);
+    const resultados = new Array(lista.length);
+    let proximoIndice = 0;
+    const quantidade = Math.min(Math.max(1, Number(limite) || 1), lista.length);
+    const trabalhadores = Array.from({ length: quantidade }, async () => {
+      while (!deveParar()) {
+        const indice = proximoIndice;
+        proximoIndice += 1;
+        if (indice >= lista.length) return;
+        resultados[indice] = await executor(lista[indice], indice);
+      }
+    });
+    await Promise.all(trabalhadores);
+    return resultados;
+  }
+
+  async function chamar(caminho, corpo, timeoutMs = 30000) {
+    return comLimiteDeRequisicoes(async () => {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), timeoutMs);
+      const executar = credentials => fetch(`${BASE}${caminho}`, {
+        headers: {
+          accept: "application/json, text/plain, */*",
+          "accept-language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
+          authorization: AUTORIZACAO,
+          "content-type": "application/json;charset=UTF-8"
+        },
+        referrer: `${BASE}/`,
+        body: typeof corpo === "string" ? corpo : JSON.stringify(corpo),
+        method: "POST",
+        mode: "cors",
+        credentials,
+        targetAddressSpace: "local",
+        signal: controller.signal
+      });
+      try {
+        let response;
+        const primaria = credenciaisPreferidas;
+        try {
+          response = await executar(primaria);
+        } catch (error) {
+          if (!(error instanceof TypeError)) throw error;
+          const alternativa = primaria === "include" ? "omit" : "include";
+          response = await executar(alternativa);
+          credenciaisPreferidas = alternativa;
+        }
+        const texto = await response.text();
+        let dados;
+        try { dados = JSON.parse(texto); } catch { dados = texto; }
+        if (!response.ok) throw new Error(`SGO respondeu HTTP ${response.status}.`);
+        return dados;
+      } catch (error) {
+        if (error.name === "AbortError") throw new Error("Tempo limite excedido na consulta SGO.");
+        if (error instanceof TypeError) {
+          if (!window.isSecureContext) {
+            throw new Error("Abra o Coordina pelo endereco HTTPS para consultar o SGO pela VPN.");
+          }
+          throw new Error("O navegador bloqueou o acesso ao SGO. Confirme a VPN e permita ao Coordina acessar a rede local.");
+        }
+        throw error;
+      } finally {
+        clearTimeout(timeout);
+      }
+    });
   }
 
   function encontrarPorChaves(valor, chaves, profundidade = 0) {
@@ -144,29 +194,47 @@
     const definicao = CONSULTAS[tipo];
     if (!definicao) throw new Error("Tipo de consulta SGO inválido.");
     const entrada = String(id ?? "").trim();
-    const caminhos = definicao.caminhos || [definicao.caminho];
-    const respostas = await Promise.all(caminhos.map(async item => ({
-      endpoint: nomeEndpoint(item),
-      dados: await chamar(item, definicao.corpo(entrada))
-    })));
-    const dados = respostas.length === 1 ? respostas[0].dados : respostas;
-    return {
-      id: entrada,
-      tipo,
-      endpoint: respostas.map(item => item.endpoint).join(", "),
-      status: "Consulta concluída",
-      dados,
-      consultadoEm: new Date().toISOString()
-    };
+    const chaveConsulta = `${tipo}:${entrada}`;
+    if (consultasEmAndamento.has(chaveConsulta)) return consultasEmAndamento.get(chaveConsulta);
+    const consulta = (async () => {
+      const caminhos = definicao.caminhos || [definicao.caminho];
+      const respostas = await Promise.all(caminhos.map(async item => ({
+        endpoint: nomeEndpoint(item),
+        dados: await chamar(item, definicao.corpo(entrada))
+      })));
+      const dados = respostas.length === 1 ? respostas[0].dados : respostas;
+      return {
+        id: entrada,
+        tipo,
+        endpoint: respostas.map(item => item.endpoint).join(", "),
+        status: "Consulta concluída",
+        dados,
+        consultadoEm: new Date().toISOString()
+      };
+    })();
+    consultasEmAndamento.set(chaveConsulta, consulta);
+    try {
+      return await consulta;
+    } finally {
+      consultasEmAndamento.delete(chaveConsulta);
+    }
   }
 
   async function carregarConfiguracao(forcar = false) {
     if (configuracaoCache && !forcar) return configuracaoCache;
-    const response = await fetch("/api/sgo/config", { credentials: "include" });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data.error || "Não foi possível carregar a configuração SGO.");
-    configuracaoCache = data;
-    return data;
+    if (configuracaoPromise && !forcar) return configuracaoPromise;
+    configuracaoPromise = (async () => {
+      const response = await fetch("/api/sgo/config", { credentials: "include" });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "Não foi possível carregar a configuração SGO.");
+      configuracaoCache = data;
+      return data;
+    })();
+    try {
+      return await configuracaoPromise;
+    } finally {
+      configuracaoPromise = null;
+    }
   }
 
   function transformar(valor, tipo) {
@@ -192,16 +260,36 @@
     const configuracao = configuracaoInformada || carregada.configuracao;
     const contexto = { input: String(id ?? "").trim(), steps: {} };
     const consultas = [];
-    for (const etapa of configuracao.etapas.filter(item => item.ativo !== false)) {
-      const entrada = resolver(etapa.entrada || "$input", contexto);
-      try {
-        const resultado = await consultarSgo(etapa.tipo, entrada);
-        contexto.steps[etapa.id] = resultado.dados;
-        consultas.push({ ...resultado, etapaId: etapa.id, etapaNome: etapa.nome, entrada });
-      } catch (error) {
-        contexto.steps[etapa.id] = { erro: error.message };
-        consultas.push({ id: contexto.input, tipo: etapa.tipo, etapaId: etapa.id, etapaNome: etapa.nome, entrada, erro: error.message });
-      }
+    const etapasAtivas = configuracao.etapas.filter(item => item.ativo !== false);
+    const idsAtivos = new Set(etapasAtivas.map(item => item.id));
+    const concluidas = new Set();
+    let pendentes = [...etapasAtivas];
+
+    while (pendentes.length) {
+      let prontas = pendentes.filter(etapa => {
+        const dependencias = [...String(etapa.entrada || "").matchAll(/\$steps\.([a-zA-Z0-9_-]+)/g)]
+          .map(item => item[1])
+          .filter(dependencia => idsAtivos.has(dependencia));
+        return dependencias.every(dependencia => concluidas.has(dependencia));
+      });
+      if (!prontas.length) prontas = [pendentes[0]];
+
+      const resultados = await Promise.all(prontas.map(async etapa => {
+        const entrada = resolver(etapa.entrada || "$input", contexto);
+        try {
+          const resultado = await consultarSgo(etapa.tipo, entrada);
+          contexto.steps[etapa.id] = resultado.dados;
+          return { ...resultado, etapaId: etapa.id, etapaNome: etapa.nome, entrada };
+        } catch (error) {
+          contexto.steps[etapa.id] = { erro: error.message };
+          return { id: contexto.input, tipo: etapa.tipo, etapaId: etapa.id, etapaNome: etapa.nome, entrada, erro: error.message };
+        }
+      }));
+      consultas.push(...resultados);
+      prontas.forEach(etapa => {
+        concluidas.add(etapa.id);
+        pendentes = pendentes.filter(item => item.id !== etapa.id);
+      });
     }
     const dados = {};
     configuracao.mapeamentos.forEach(item => {
@@ -227,6 +315,7 @@
     consultarDadosProjeto,
     executarPipeline,
     carregarConfiguracao,
+    processarEmParalelo,
     resolver,
     achatar
   };

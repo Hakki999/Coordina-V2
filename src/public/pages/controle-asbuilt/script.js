@@ -20,6 +20,7 @@ const filtrosColuna = new Map();
 const timersSalvamento = new Map();
 const sugestoesFiltroCache = new Map();
 const timersSugestoes = new Map();
+const CONCORRENCIA_PROJETOS_SGO = 4;
 const CHAVE_COLUNAS = "controle-asbuilt-colunas-visiveis-v2";
 const CHAVE_ORDEM_COLUNAS = "controle-asbuilt-colunas-ordem-v1";
 const COLUNAS_PADRAO = new Set([
@@ -359,15 +360,19 @@ async function atualizarSgoRegistros(registros, automatico = false) {
   if (!validos.length) return msgAviso("Selecione ao menos um registro com projeto informado.");
   definirCarga(`Atualizando SGO de ${validos.length} projeto(s)...`);
   let atualizados = 0;
+  let processados = 0;
   const erros = [];
-  for (const registro of validos) {
+  await window.sgoClient.processarEmParalelo(validos, async registro => {
     try {
       if (await atualizarRegistroComSgo(registro)) atualizados += 1;
     } catch (error) {
       marcarEstado(registro.id, "erro", "Erro SGO");
       erros.push(`${registro.projeto}: ${error.message}`);
+    } finally {
+      processados += 1;
+      definirCarga(`Atualizando SGO: ${processados} de ${validos.length}`);
     }
-  }
+  }, CONCORRENCIA_PROJETOS_SGO);
   renderizarCorpo();
   if (atualizados) msgSucesso(`${atualizados} projeto(s) atualizado(s) com dados do SGO.`);
   if (erros.length) {
@@ -414,14 +419,13 @@ async function atualizarTodosV2Sgo() {
       return;
     }
 
-    for (const registro of projetos) {
-      if (cancelarAtualizacaoV2) break;
+    await window.sgoClient.processarEmParalelo(projetos, async registro => {
       atualizarPainelV2({
         processados,
         total: projetos.length,
         atualizados,
         erros: falhas.length,
-        texto: `Consultando ${registro.projeto} (${processados + 1} de ${projetos.length})`
+        texto: `Consultando em paralelo (${processados} de ${projetos.length})`
       });
       try {
         const resultado = await window.sgoClient.consultarDadosProjeto(registro.projeto, registro);
@@ -437,7 +441,14 @@ async function atualizarTodosV2Sgo() {
         falhas.push(`${registro.projeto}: ${error.message}`);
       }
       processados += 1;
-    }
+      atualizarPainelV2({
+        processados,
+        total: projetos.length,
+        atualizados,
+        erros: falhas.length,
+        texto: `Consultando em paralelo (${processados} de ${projetos.length})`
+      });
+    }, CONCORRENCIA_PROJETOS_SGO, () => cancelarAtualizacaoV2);
 
     const interrompida = cancelarAtualizacaoV2;
     atualizarPainelV2({

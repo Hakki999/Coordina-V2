@@ -79,14 +79,14 @@ document.getElementById("formConsulta").addEventListener("submit", async event =
   const botao = event.currentTarget.querySelector("button[type=submit]");
   botao.disabled = true;
   try {
-    for (const id of ids) {
+    await window.sgoClient.processarEmParalelo(ids, async id => {
       try {
         resultadosSgo.push(await window.sgoClient.consultarSgo(tipo, id));
       } catch (error) {
         resultadosSgo.push({ id, tipo, erro: error.message, consultadoEm: new Date().toISOString() });
       }
       renderizar();
-    }
+    }, 4);
     msgSucesso("Consultas concluídas. A tabela está pronta para copiar.");
   } finally {
     botao.disabled = false;
